@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fantasy Football themed colors: Green field with gold accents -->
+    <style name="Theme.FantasyDraftPicker" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <!-- Primary: Football field green -->
+        <item name="colorPrimary">#2E7D32</item>
+        <item name="colorPrimaryVariant">#1B5E20</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <!-- Secondary: Gold/Trophy color -->
+        <item name="colorSecondary">#FFA000</item>
+        <item name="colorSecondaryVariant">#F57C00</item>
+        <item name="colorOnSecondary">#000000</item>
+        <!-- Additional colors -->
+        <item name="colorError">#B00020</item>
+        <item name="colorOnError">#FFFFFF</item>
+        <item name="colorSurface">#FFFFFF</item>
+        <item name="colorOnSurface">#000000</item>
+        <!-- Prevent ActionBar overlay -->
+        <item name="windowActionBarOverlay">false</item>
+        <item name="android:windowActionBarOverlay">false</item>
+        <!-- Custom ActionBar style -->
+        <item name="actionBarStyle">@style/CustomActionBar</item>
+    </style>
+    
+    <!-- Custom ActionBar with football grass background -->
+    <style name="CustomActionBar" parent="Widget.MaterialComponents.ActionBar.Primary">
+        <item name="background">@drawable/header_football_grass</item>
+        <item name="titleTextColor">#FFFFFF</item>
+    </style>
+</resources>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Grass field background gradient -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="90"
+                android:startColor="#2E7D32"
+                android:centerColor="#388E3C"
+                android:endColor="#43A047"
+                android:type="linear" />
+        </shape>
+    </item>
+    
+    <!-- Grass texture overlay (darker stripes) -->
+    <item android:top="0dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="0"
+                android:startColor="#00000000"
+                android:centerColor="#1A000000"
+                android:endColor="#00000000"
+                android:type="linear" />
+        </shape>
+    </item>
+    
+    <!-- Football positioned on the right side -->
+    <item
+        android:width="40dp"
+        android:height="40dp"
+        android:gravity="end|center_vertical"
+        android:right="8dp">
+        <rotate
+            android:fromDegrees="25"
+            android:pivotX="50%"
+            android:pivotY="50%">
+            <layer-list>
+                <!-- White Football Shape -->
+                <item>
+                    <shape android:shape="oval">
+                        <solid android:color="#F5F5F5" />
+                        <size android:width="40dp" android:height="40dp" />
+                    </shape>
+                </item>
+                
+                <!-- Brown laces overlay -->
+                <item
+                    android:top="12dp"
+                    android:bottom="12dp"
+                    android:left="18dp"
+                    android:right="18dp">
+                    <shape android:shape="rectangle">
+                        <solid android:color="#8B6F47" />
+                    </shape>
+                </item>
+                
+                <!-- Horizontal lace 1 -->
+                <item
+                    android:top="10dp"
+                    android:bottom="26dp"
+                    android:left="14dp"
+                    android:right="14dp">
+                    <shape android:shape="rectangle">
+                        <solid android:color="#8B6F47" />
+                    </shape>
+                </item>
+                
+                <!-- Horizontal lace 2 -->
+                <item
+                    android:top="16dp"
+                    android:bottom="20dp"
+                    android:left="14dp"
+                    android:right="14dp">
+                    <shape android:shape="rectangle">
+                        <solid android:color="#8B6F47" />
+                    </shape>
+                </item>
+                
+                <!-- Horizontal lace 3 -->
+                <item
+                    android:top="22dp"
+                    android:bottom="14dp"
+                    android:left="14dp"
+                    android:right="14dp">
+                    <shape android:shape="rectangle">
+                        <solid android:color="#8B6F47" />
+                    </shape>
+                </item>
+                
+                <!-- Horizontal lace 4 -->
+                <item
+                    android:top="28dp"
+                    android:bottom="8dp"
+                    android:left="14dp"
+                    android:right="14dp">
+                    <shape android:shape="rectangle">
+                        <solid android:color="#8B6F47" />
+                    </shape>
+                </item>
+            </layer-list>
+        </rotate>
+    </item>
+</layer-list>

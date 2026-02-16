@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FFL Draft Day Picker</string>
+    
+    <!-- Draft Configuration -->
+    <string name="draft_configuration">League Configuration</string>
+    <string name="league_name_placeholder">League: --</string>
+    <string name="teams_placeholder">Teams: --</string>
+    <string name="flow_placeholder">Flow: --</string>
+    <string name="rounds_placeholder">Rounds: --</string>
+    <string name="edit_config">Edit Config</string>
+    
+    <!-- Current Pick -->
+    <string name="current_pick">Current Pick</string>
+    <string name="round_pick_placeholder">Round --, Pick --</string>
+    <string name="team_placeholder">Team: --</string>
+    <string name="make_pick">Make Pick</string>
+    <string name="reset_draft">Reset Draft Board</string>
+    
+    <!-- Draft History -->
+    <string name="draft_history">Draft History</string>
+    
+    <!-- Best Available -->
+    <string name="best_available">Best Available</string>
+    <string name="player_name_placeholder">--</string>
+    <string name="position_placeholder">--</string>
+    <string name="recommended">Recommended</string>
+    <string name="view_all_players">View All Players</string>
+    
+    <!-- Config Activity -->
+    <string name="team_configuration">League Configuration</string>
+    <string name="number_of_teams">Number of Teams</string>
+    <string name="draft_flow">Draft Flow</string>
+    <string name="teams">Teams</string>
+    <string name="save_configuration">Save Configuration</string>
+    <string name="team_name_hint">Enter team name</string>
+    <string name="serpentine">Serpentine</string>
+    <string name="linear">Linear</string>
+    
+    <!-- Validation Messages -->
+    <string name="error_duplicate_team_name">Team name must be unique</string>
+    <string name="error_empty_team_name">Team name cannot be empty</string>
+    <string name="error_incomplete_draft_order">All draft positions must be assigned</string>
+    <string name="error_invalid_team_count">Team count must be between 2 and 20</string>
+    <string name="error_player_already_drafted">This player has already been drafted</string>
+    <string name="error_invalid_player_selection">Invalid player selection</string>
+    <string name="config_saved">Configuration saved successfully</string>
+    
+    <!-- Persistence Error Messages -->
+    <string name="error_save_failed">Failed to save draft state</string>
+    <string name="error_load_failed">Failed to load draft state</string>
+    <string name="error_storage_full">Storage is full. Cannot save draft state.</string>
+    <string name="error_corrupted_data">Draft data is corrupted. Starting fresh.</string>
+    <string name="persistence_disabled_title">Persistence Error</string>
+    <string name="persistence_disabled_message">Unable to save draft state. Would you like to continue without saving or reset the draft?</string>
+    <string name="continue_without_saving">Continue Without Saving</string>
+    <string name="reset_and_retry">Reset and Retry</string>
+    
+    <!-- Player Data Refresh -->
+    <string name="refresh_player_data">Refresh Player Data</string>
+    <string name="refresh_confirmation_title">Refresh Player Data?</string>
+    <string name="refresh_confirmation_message">This will fetch the latest player data from ESPN and reset your current draft. All picks will be cleared. Continue?</string>
+    <string name="refresh_confirmation_cancel">Cancel</string>
+    <string name="refresh_confirmation_confirm">Refresh</string>
+    <string name="refresh_progress_title">Refreshing Player Data</string>
+    <string name="refresh_progress_message">Fetching latest data from ESPN…</string>
+    <string name="refresh_success">Player data refreshed successfully! %d players updated.</string>
+    <string name="refresh_error_no_network">No internet connection. Please check your network and try again.</string>
+    <string name="refresh_error_server_unreachable">Unable to reach ESPN servers. Please try again later.</string>
+    <string name="refresh_error_timeout">Request timed out. Please try again.</string>
+    <string name="refresh_error_invalid_data">Invalid data format. Please try again later.</string>
+    <string name="refresh_error_save_failed">Unable to save player data. Please check storage space.</string>
+    <string name="refresh_error_generic">Refresh failed: %s</string>
+</resources>
+

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Background -->
+    <path
+        android:fillColor="#3A7CA5"
+        android:pathData="M0,0h108v108h-108z"/>
+    
+    <!-- Football shape -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,20 C40,20 28,32 28,46 C28,60 40,72 54,72 C68,72 80,60 80,46 C80,32 68,20 54,20 Z
+                         M54,24 C65.5,24 76,34.5 76,46 C76,57.5 65.5,68 54,68 C42.5,68 32,57.5 32,46 C32,34.5 42.5,24 54,24 Z"/>
+    
+    <!-- Laces -->
+    <path
+        android:fillColor="#8B6F47"
+        android:strokeWidth="3"
+        android:pathData="M48,38 L60,38 M48,43 L60,43 M48,48 L60,48 M48,53 L60,53 M54,36 L54,55"/>
+</vector>

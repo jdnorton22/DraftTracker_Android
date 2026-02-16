@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:translateX="54"
+        android:translateY="54">
+        <group
+            android:rotation="25"
+            android:scaleX="0.75"
+            android:scaleY="0.75">
+            <!-- White Football Shape - more elongated oval -->
+            <path
+                android:fillColor="#F5F5F5"
+                android:pathData="M0,-32 Q18,-32 28,-20 Q32,-12 32,0 Q32,12 28,20 Q18,32 0,32 Q-18,32 -28,20 Q-32,12 -32,0 Q-32,-12 -28,-20 Q-18,-32 0,-32 Z"/>
+            
+            <!-- Subtle shadow/outline for depth -->
+            <path
+                android:strokeColor="#E0E0E0"
+                android:strokeWidth="1"
+                android:fillColor="@android:color/transparent"
+                android:pathData="M0,-30 Q17,-30 26,-19 Q30,-11 30,0 Q30,11 26,19 Q17,30 0,30 Q-17,30 -26,19 Q-30,11 -30,0 Q-30,-11 -26,-19 Q-17,-30 0,-30 Z"/>
+            
+            <!-- Center vertical lace line -->
+            <path
+                android:fillColor="#8B6F47"
+                android:pathData="M-1.5,-22 L-1.5,22 L1.5,22 L1.5,-22 Z"/>
+            
+            <!-- Horizontal laces - evenly spaced -->
+            <path
+                android:fillColor="#8B6F47"
+                android:pathData="M-10,-14 L10,-14 L10,-11 L-10,-11 Z"/>
+            <path
+                android:fillColor="#8B6F47"
+                android:pathData="M-10,-7 L10,-7 L10,-4 L-10,-4 Z"/>
+            <path
+                android:fillColor="#8B6F47"
+                android:pathData="M-10,0 L10,0 L10,3 L-10,3 Z"/>
+            <path
+                android:fillColor="#8B6F47"
+                android:pathData="M-10,7 L10,7 L10,10 L-10,10 Z"/>
+            <path
+                android:fillColor="#8B6F47"
+                android:pathData="M-10,14 L10,14 L10,17 L-10,17 Z"/>
+        </group>
+    </group>
+</vector>
