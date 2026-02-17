@@ -1,6 +1,7 @@
 package com.fantasydraft.picker.ui;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fantasydraft.picker.R;
+import com.fantasydraft.picker.managers.PlayerDataRefreshManager;
 import com.fantasydraft.picker.models.DraftConfig;
 import com.fantasydraft.picker.models.FlowType;
 import com.fantasydraft.picker.models.Team;
@@ -47,6 +49,7 @@ public class ConfigFragment extends Fragment {
     private CheckBox checkboxSkipFirstRound;
     private RecyclerView recyclerTeams;
     private Button buttonSaveConfig;
+    private Button buttonRefreshPlayerData;
     
     // Adapter
     private TeamConfigAdapter teamAdapter;
@@ -67,6 +70,7 @@ public class ConfigFragment extends Fragment {
         setupSpinner();
         setupRecyclerView();
         setupSaveButton();
+        setupRefreshButton();
         
         return view;
     }
@@ -165,6 +169,7 @@ public class ConfigFragment extends Fragment {
         checkboxSkipFirstRound = view.findViewById(R.id.checkbox_skip_first_round);
         recyclerTeams = view.findViewById(R.id.recycler_teams);
         buttonSaveConfig = view.findViewById(R.id.button_save_config);
+        buttonRefreshPlayerData = view.findViewById(R.id.button_refresh_player_data);
     }
     
     /**
@@ -342,6 +347,97 @@ public class ConfigFragment extends Fragment {
         if (buttonSaveConfig != null) {
             buttonSaveConfig.setOnClickListener(v -> saveConfiguration());
         }
+    }
+    
+    /**
+     * Set up the refresh player data button.
+     */
+    private void setupRefreshButton() {
+        if (buttonRefreshPlayerData != null) {
+            buttonRefreshPlayerData.setOnClickListener(v -> showRefreshConfirmationDialog());
+        }
+    }
+    
+    /**
+     * Show confirmation dialog before refreshing player data.
+     */
+    private void showRefreshConfirmationDialog() {
+        MainActivity mainActivity = getMainActivity();
+        if (mainActivity == null) {
+            return;
+        }
+        
+        new AlertDialog.Builder(mainActivity)
+            .setTitle("Refresh Player Data?")
+            .setMessage("This will download the latest player data and reset your current draft. All picks will be cleared and cannot be recovered. Continue?")
+            .setPositiveButton("Refresh", (dialog, which) -> refreshPlayerData())
+            .setNegativeButton("Cancel", null)
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .show();
+    }
+    
+    /**
+     * Refresh player data from GitHub.
+     */
+    private void refreshPlayerData() {
+        MainActivity mainActivity = getMainActivity();
+        if (mainActivity == null) {
+            return;
+        }
+        
+        // Show progress dialog
+        android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(mainActivity);
+        progressDialog.setTitle("Refreshing Player Data");
+        progressDialog.setMessage("Downloading latest data...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+        
+        // Create refresh manager
+        PlayerDataRefreshManager refreshManager = new PlayerDataRefreshManager(
+            mainActivity,
+            mainActivity.getPlayerManager(),
+            mainActivity.getDraftCoordinator(),
+            mainActivity.getPersistenceManager(),
+            mainActivity.getTeams(),
+            mainActivity.getPickHistory()
+        );
+        
+        // Execute refresh
+        refreshManager.refreshPlayerData(new PlayerDataRefreshManager.RefreshCallback() {
+            @Override
+            public void onRefreshStart() {
+                // Already showing progress dialog
+            }
+            
+            @Override
+            public void onRefreshSuccess(int playerCount) {
+                progressDialog.dismiss();
+                
+                new AlertDialog.Builder(mainActivity)
+                    .setTitle("Refresh Complete")
+                    .setMessage("Successfully refreshed " + playerCount + " players. Draft has been reset.")
+                    .setPositiveButton("OK", (dialog, which) -> {
+                        // Reload the UI to reflect changes
+                        if (getActivity() != null) {
+                            getActivity().recreate();
+                        }
+                    })
+                    .setCancelable(false)
+                    .show();
+            }
+            
+            @Override
+            public void onRefreshError(String errorMessage) {
+                progressDialog.dismiss();
+                
+                new AlertDialog.Builder(mainActivity)
+                    .setTitle("Refresh Failed")
+                    .setMessage(errorMessage)
+                    .setPositiveButton("OK", null)
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+            }
+        });
     }
     
     /**

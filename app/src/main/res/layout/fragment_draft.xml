@@ -27,50 +27,50 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="12dp">
+            android:padding="8dp">
 
             <TextView
                 android:id="@+id/text_league_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="My Fantasy League"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 android:gravity="center"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginBottom="6dp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/current_pick"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="4dp" />
 
             <TextView
                 android:id="@+id/text_overall_pick"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Pick 1 of 150"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:textStyle="italic"
-                android:layout_marginBottom="4dp" />
+                android:layout_marginBottom="2dp" />
 
             <TextView
                 android:id="@+id/text_round_pick"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/round_pick_placeholder"
-                android:textSize="14sp" />
+                android:textSize="13sp" />
 
             <TextView
                 android:id="@+id/text_current_team"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/team_placeholder"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:textStyle="bold"
-                android:layout_marginTop="4dp" />
+                android:layout_marginTop="2dp" />
 
         </LinearLayout>
 
@@ -142,6 +142,18 @@
                         android:gravity="center_horizontal"
                         android:layout_gravity="center_horizontal"
                         android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:id="@+id/text_best_player_injury_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:gravity="center_horizontal"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginBottom="4dp"
+                        android:visibility="gone" />
 
                     <TextView
                         android:id="@+id/text_best_player_stats"
@@ -221,18 +233,23 @@
                         android:orientation="horizontal"
                         android:gravity="center_vertical">
                         <TextView
+                            android:id="@+id/text_position_wr"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:text="WR"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="#333333"
+                            android:gravity="center"
+                            android:background="@drawable/circle_position_badge" />
+                        <TextView
+                            android:id="@+id/text_count_wr"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="WR"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-                        <TextView
-                            android:id="@+id/text_count_wr"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
                             android:text="0"
-                            android:textSize="13sp" />
+                            android:textSize="13sp"
+                            android:gravity="end" />
                     </LinearLayout>
 
                     <!-- RB Count -->
@@ -243,18 +260,23 @@
                         android:orientation="horizontal"
                         android:gravity="center_vertical">
                         <TextView
+                            android:id="@+id/text_position_rb"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:text="RB"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="#333333"
+                            android:gravity="center"
+                            android:background="@drawable/circle_position_badge" />
+                        <TextView
+                            android:id="@+id/text_count_rb"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="RB"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-                        <TextView
-                            android:id="@+id/text_count_rb"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
                             android:text="0"
-                            android:textSize="13sp" />
+                            android:textSize="13sp"
+                            android:gravity="end" />
                     </LinearLayout>
 
                     <!-- QB Count -->
@@ -265,18 +287,23 @@
                         android:orientation="horizontal"
                         android:gravity="center_vertical">
                         <TextView
+                            android:id="@+id/text_position_qb"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:text="QB"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="#333333"
+                            android:gravity="center"
+                            android:background="@drawable/circle_position_badge" />
+                        <TextView
+                            android:id="@+id/text_count_qb"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="QB"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-                        <TextView
-                            android:id="@+id/text_count_qb"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
                             android:text="0"
-                            android:textSize="13sp" />
+                            android:textSize="13sp"
+                            android:gravity="end" />
                     </LinearLayout>
 
                     <!-- TE Count -->
@@ -287,18 +314,23 @@
                         android:orientation="horizontal"
                         android:gravity="center_vertical">
                         <TextView
+                            android:id="@+id/text_position_te"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:text="TE"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="#333333"
+                            android:gravity="center"
+                            android:background="@drawable/circle_position_badge" />
+                        <TextView
+                            android:id="@+id/text_count_te"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="TE"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-                        <TextView
-                            android:id="@+id/text_count_te"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
                             android:text="0"
-                            android:textSize="13sp" />
+                            android:textSize="13sp"
+                            android:gravity="end" />
                     </LinearLayout>
 
                     <!-- DST Count -->
@@ -309,18 +341,23 @@
                         android:orientation="horizontal"
                         android:gravity="center_vertical">
                         <TextView
+                            android:id="@+id/text_position_dst"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:text="DST"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="#333333"
+                            android:gravity="center"
+                            android:background="@drawable/circle_position_badge" />
+                        <TextView
+                            android:id="@+id/text_count_dst"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="DST"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-                        <TextView
-                            android:id="@+id/text_count_dst"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
                             android:text="0"
-                            android:textSize="13sp" />
+                            android:textSize="13sp"
+                            android:gravity="end" />
                     </LinearLayout>
 
                     <!-- K Count -->
@@ -331,18 +368,23 @@
                         android:orientation="horizontal"
                         android:gravity="center_vertical">
                         <TextView
+                            android:id="@+id/text_position_k"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:text="K"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="#333333"
+                            android:gravity="center"
+                            android:background="@drawable/circle_position_badge" />
+                        <TextView
+                            android:id="@+id/text_count_k"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="K"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-                        <TextView
-                            android:id="@+id/text_count_k"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
                             android:text="0"
-                            android:textSize="13sp" />
+                            android:textSize="13sp"
+                            android:gravity="end" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -440,14 +482,35 @@
                         android:orientation="vertical"
                         android:layout_marginStart="8dp">
 
-                        <TextView
-                            android:id="@+id/text_pick_1_player"
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="No picks yet"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="#333333" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/text_pick_1_player"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="No picks yet"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="#333333"
+                                android:maxLines="1"
+                                android:ellipsize="end" />
+
+                            <TextView
+                                android:id="@+id/text_pick_1_injury_status"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:layout_marginStart="8dp"
+                                android:visibility="gone" />
+
+                        </LinearLayout>
 
                         <TextView
                             android:id="@+id/text_pick_1_details"
@@ -494,13 +557,34 @@
                         android:orientation="vertical"
                         android:layout_marginStart="8dp">
 
-                        <TextView
-                            android:id="@+id/text_pick_2_player"
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="--"
-                            android:textSize="14sp"
-                            android:textColor="#333333" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/text_pick_2_player"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="--"
+                                android:textSize="14sp"
+                                android:textColor="#333333"
+                                android:maxLines="1"
+                                android:ellipsize="end" />
+
+                            <TextView
+                                android:id="@+id/text_pick_2_injury_status"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:layout_marginStart="8dp"
+                                android:visibility="gone" />
+
+                        </LinearLayout>
 
                         <TextView
                             android:id="@+id/text_pick_2_details"
@@ -547,13 +631,34 @@
                         android:orientation="vertical"
                         android:layout_marginStart="8dp">
 
-                        <TextView
-                            android:id="@+id/text_pick_3_player"
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="--"
-                            android:textSize="14sp"
-                            android:textColor="#333333" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/text_pick_3_player"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="--"
+                                android:textSize="14sp"
+                                android:textColor="#333333"
+                                android:maxLines="1"
+                                android:ellipsize="end" />
+
+                            <TextView
+                                android:id="@+id/text_pick_3_injury_status"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:layout_marginStart="8dp"
+                                android:visibility="gone" />
+
+                        </LinearLayout>
 
                         <TextView
                             android:id="@+id/text_pick_3_details"

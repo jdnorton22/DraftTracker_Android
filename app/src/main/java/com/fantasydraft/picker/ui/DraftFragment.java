@@ -54,10 +54,17 @@ public class DraftFragment extends Fragment {
     private Button buttonDraftBestPlayer;
     private TextView textBestPlayerName;
     private TextView textBestPlayerPosition;
+    private TextView textBestPlayerInjuryStatus;
     private TextView textBestPlayerStats;
     
     // UI Components - Position Counts
     private CheckBox checkboxCurrentTeam;
+    private TextView textPositionWR;
+    private TextView textPositionRB;
+    private TextView textPositionQB;
+    private TextView textPositionTE;
+    private TextView textPositionDST;
+    private TextView textPositionK;
     private TextView textCountWR;
     private TextView textCountRB;
     private TextView textCountQB;
@@ -74,12 +81,15 @@ public class DraftFragment extends Fragment {
     private LinearLayout pickSlot3;
     private TextView textPick1Number;
     private TextView textPick1Player;
+    private TextView textPick1InjuryStatus;
     private TextView textPick1Details;
     private TextView textPick2Number;
     private TextView textPick2Player;
+    private TextView textPick2InjuryStatus;
     private TextView textPick2Details;
     private TextView textPick3Number;
     private TextView textPick3Player;
+    private TextView textPick3InjuryStatus;
     private TextView textPick3Details;
     
     // UI Components - Action Buttons
@@ -142,16 +152,31 @@ public class DraftFragment extends Fragment {
         buttonDraftBestPlayer = view.findViewById(R.id.button_draft_best_player);
         textBestPlayerName = view.findViewById(R.id.text_best_player_name);
         textBestPlayerPosition = view.findViewById(R.id.text_best_player_position);
+        textBestPlayerInjuryStatus = view.findViewById(R.id.text_best_player_injury_status);
         textBestPlayerStats = view.findViewById(R.id.text_best_player_stats);
         
         // Position Counts
         checkboxCurrentTeam = view.findViewById(R.id.checkbox_current_team);
+        textPositionWR = view.findViewById(R.id.text_position_wr);
+        textPositionRB = view.findViewById(R.id.text_position_rb);
+        textPositionQB = view.findViewById(R.id.text_position_qb);
+        textPositionTE = view.findViewById(R.id.text_position_te);
+        textPositionDST = view.findViewById(R.id.text_position_dst);
+        textPositionK = view.findViewById(R.id.text_position_k);
         textCountWR = view.findViewById(R.id.text_count_wr);
         textCountRB = view.findViewById(R.id.text_count_rb);
         textCountQB = view.findViewById(R.id.text_count_qb);
         textCountTE = view.findViewById(R.id.text_count_te);
         textCountDST = view.findViewById(R.id.text_count_dst);
         textCountK = view.findViewById(R.id.text_count_k);
+        
+        // Set position badge colors
+        textPositionWR.setBackgroundColor(PositionColors.getColorForPosition("WR"));
+        textPositionRB.setBackgroundColor(PositionColors.getColorForPosition("RB"));
+        textPositionQB.setBackgroundColor(PositionColors.getColorForPosition("QB"));
+        textPositionTE.setBackgroundColor(PositionColors.getColorForPosition("TE"));
+        textPositionDST.setBackgroundColor(PositionColors.getColorForPosition("DST"));
+        textPositionK.setBackgroundColor(PositionColors.getColorForPosition("K"));
         
         // Set up checkbox change listener
         checkboxCurrentTeam.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -165,12 +190,15 @@ public class DraftFragment extends Fragment {
         pickSlot3 = view.findViewById(R.id.pick_slot_3);
         textPick1Number = view.findViewById(R.id.text_pick_1_number);
         textPick1Player = view.findViewById(R.id.text_pick_1_player);
+        textPick1InjuryStatus = view.findViewById(R.id.text_pick_1_injury_status);
         textPick1Details = view.findViewById(R.id.text_pick_1_details);
         textPick2Number = view.findViewById(R.id.text_pick_2_number);
         textPick2Player = view.findViewById(R.id.text_pick_2_player);
+        textPick2InjuryStatus = view.findViewById(R.id.text_pick_2_injury_status);
         textPick2Details = view.findViewById(R.id.text_pick_2_details);
         textPick3Number = view.findViewById(R.id.text_pick_3_number);
         textPick3Player = view.findViewById(R.id.text_pick_3_player);
+        textPick3InjuryStatus = view.findViewById(R.id.text_pick_3_injury_status);
         textPick3Details = view.findViewById(R.id.text_pick_3_details);
         
         // Action Buttons
@@ -255,7 +283,7 @@ public class DraftFragment extends Fragment {
                 
                 if (teamIndex >= 0 && teamIndex < teams.size()) {
                     Team currentTeam = teams.get(teamIndex);
-                    textCurrentTeam.setText("Team: " + currentTeam.getName());
+                    textCurrentTeam.setText("On the clock: " + currentTeam.getName());
                 }
             }
         }
@@ -277,6 +305,27 @@ public class DraftFragment extends Fragment {
         if (bestPlayer != null) {
             textBestPlayerName.setText(bestPlayer.getName());
             textBestPlayerPosition.setText(bestPlayer.getPosition() + " - #" + bestPlayer.getRank());
+            
+            // Display injury status with color coding
+            if (bestPlayer.getInjuryStatus() != null && !bestPlayer.getInjuryStatus().isEmpty() && 
+                !bestPlayer.getInjuryStatus().equalsIgnoreCase("HEALTHY")) {
+                textBestPlayerInjuryStatus.setText(bestPlayer.getInjuryStatus());
+                textBestPlayerInjuryStatus.setVisibility(View.VISIBLE);
+                
+                // Color code based on severity
+                String status = bestPlayer.getInjuryStatus().toUpperCase();
+                if (status.equals("OUT") || status.equals("IR")) {
+                    textBestPlayerInjuryStatus.setTextColor(0xFFD32F2F); // Red
+                } else if (status.equals("DOUBTFUL")) {
+                    textBestPlayerInjuryStatus.setTextColor(0xFFFF6F00); // Dark Orange
+                } else if (status.equals("QUESTIONABLE")) {
+                    textBestPlayerInjuryStatus.setTextColor(0xFFFFA000); // Orange/Yellow
+                } else {
+                    textBestPlayerInjuryStatus.setTextColor(0xFF757575); // Gray
+                }
+            } else {
+                textBestPlayerInjuryStatus.setVisibility(View.GONE);
+            }
             
             // Display stats if available
             if (bestPlayer.getLastYearStats() != null && !bestPlayer.getLastYearStats().isEmpty()) {
@@ -303,6 +352,7 @@ public class DraftFragment extends Fragment {
         } else {
             textBestPlayerName.setText("No players available");
             textBestPlayerPosition.setText("--");
+            textBestPlayerInjuryStatus.setVisibility(View.GONE);
             textBestPlayerStats.setVisibility(View.GONE);
             
             // Reset to default colors
@@ -408,9 +458,9 @@ public class DraftFragment extends Fragment {
         
         if (pickHistory == null || pickHistory.isEmpty()) {
             // No picks yet - clear all slots
-            clearPickSlot(textPick1Number, textPick1Player, textPick1Details);
-            clearPickSlot(textPick2Number, textPick2Player, textPick2Details);
-            clearPickSlot(textPick3Number, textPick3Player, textPick3Details);
+            clearPickSlot(textPick1Number, textPick1Player, textPick1InjuryStatus, textPick1Details);
+            clearPickSlot(textPick2Number, textPick2Player, textPick2InjuryStatus, textPick2Details);
+            clearPickSlot(textPick3Number, textPick3Player, textPick3InjuryStatus, textPick3Details);
             
             // Set first slot message
             textPick1Player.setText("No picks yet");
@@ -423,32 +473,32 @@ public class DraftFragment extends Fragment {
         // Pick 1 (most recent)
         if (totalPicks >= 1) {
             Pick pick1 = pickHistory.get(totalPicks - 1);
-            updatePickSlot(pick1, textPick1Number, textPick1Player, textPick1Details);
+            updatePickSlot(pick1, textPick1Number, textPick1Player, textPick1InjuryStatus, textPick1Details);
         } else {
-            clearPickSlot(textPick1Number, textPick1Player, textPick1Details);
+            clearPickSlot(textPick1Number, textPick1Player, textPick1InjuryStatus, textPick1Details);
         }
         
         // Pick 2 (second most recent)
         if (totalPicks >= 2) {
             Pick pick2 = pickHistory.get(totalPicks - 2);
-            updatePickSlot(pick2, textPick2Number, textPick2Player, textPick2Details);
+            updatePickSlot(pick2, textPick2Number, textPick2Player, textPick2InjuryStatus, textPick2Details);
         } else {
-            clearPickSlot(textPick2Number, textPick2Player, textPick2Details);
+            clearPickSlot(textPick2Number, textPick2Player, textPick2InjuryStatus, textPick2Details);
         }
         
         // Pick 3 (third most recent)
         if (totalPicks >= 3) {
             Pick pick3 = pickHistory.get(totalPicks - 3);
-            updatePickSlot(pick3, textPick3Number, textPick3Player, textPick3Details);
+            updatePickSlot(pick3, textPick3Number, textPick3Player, textPick3InjuryStatus, textPick3Details);
         } else {
-            clearPickSlot(textPick3Number, textPick3Player, textPick3Details);
+            clearPickSlot(textPick3Number, textPick3Player, textPick3InjuryStatus, textPick3Details);
         }
     }
     
     /**
      * Update a single pick slot with pick information.
      */
-    private void updatePickSlot(Pick pick, TextView numberView, TextView playerView, TextView detailsView) {
+    private void updatePickSlot(Pick pick, TextView numberView, TextView playerView, TextView injuryStatusView, TextView detailsView) {
         MainActivity mainActivity = getMainActivity();
         if (mainActivity == null) {
             return;
@@ -464,6 +514,27 @@ public class DraftFragment extends Fragment {
         Player player = playerManager.getPlayerById(pick.getPlayerId());
         if (player != null) {
             playerView.setText(player.getName());
+            
+            // Display injury status with color coding
+            if (player.getInjuryStatus() != null && !player.getInjuryStatus().isEmpty() && 
+                !player.getInjuryStatus().equalsIgnoreCase("HEALTHY")) {
+                injuryStatusView.setText(player.getInjuryStatus());
+                injuryStatusView.setVisibility(View.VISIBLE);
+                
+                // Color code based on severity
+                String status = player.getInjuryStatus().toUpperCase();
+                if (status.equals("OUT") || status.equals("IR")) {
+                    injuryStatusView.setTextColor(0xFFD32F2F); // Red
+                } else if (status.equals("DOUBTFUL")) {
+                    injuryStatusView.setTextColor(0xFFFF6F00); // Dark Orange
+                } else if (status.equals("QUESTIONABLE")) {
+                    injuryStatusView.setTextColor(0xFFFFA000); // Orange/Yellow
+                } else {
+                    injuryStatusView.setTextColor(0xFF757575); // Gray
+                }
+            } else {
+                injuryStatusView.setVisibility(View.GONE);
+            }
             
             // Apply position-based background color to the pick slot
             LinearLayout pickSlot = (LinearLayout) numberView.getParent();
@@ -486,6 +557,7 @@ public class DraftFragment extends Fragment {
             detailsView.setText(details);
         } else {
             playerView.setText("Unknown Player");
+            injuryStatusView.setVisibility(View.GONE);
             detailsView.setText("");
         }
     }
@@ -493,9 +565,10 @@ public class DraftFragment extends Fragment {
     /**
      * Clear a pick slot (show placeholder).
      */
-    private void clearPickSlot(TextView numberView, TextView playerView, TextView detailsView) {
+    private void clearPickSlot(TextView numberView, TextView playerView, TextView injuryStatusView, TextView detailsView) {
         numberView.setText("--");
         playerView.setText("--");
+        injuryStatusView.setVisibility(View.GONE);
         detailsView.setText("");
         
         // Reset background color to default

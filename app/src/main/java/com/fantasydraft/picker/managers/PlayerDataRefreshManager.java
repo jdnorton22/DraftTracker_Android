@@ -117,14 +117,11 @@ public class PlayerDataRefreshManager {
                 String errorMessage;
                 
                 switch (error) {
-                    case NO_CREDENTIALS:
-                        errorMessage = "ESPN API credentials not configured. Please set up your credentials in the ESPN API Credentials screen.";
-                        break;
                     case NO_NETWORK:
                         errorMessage = "No internet connection. Please check your network and try again.";
                         break;
                     case SERVER_UNREACHABLE:
-                        errorMessage = "Unable to reach ESPN servers. Please try again later.";
+                        errorMessage = "Unable to reach server. Please try again later.";
                         break;
                     case TIMEOUT:
                         errorMessage = "Request timed out. Please try again.";
@@ -214,9 +211,11 @@ public class PlayerDataRefreshManager {
                 }
             }
             
-            // Reset draft state to Round 1, Pick 1
-            DraftState newState = new DraftState(1, 1, false);
+            // Get current config or use default
             DraftConfig config = new DraftConfig(FlowType.SERPENTINE, 15);
+            
+            // Reset the draft using the coordinator (this will reset state to Round 1, Pick 1)
+            DraftState newState = draftCoordinator.resetDraft(config);
             
             // Save clean state to persistence
             DraftSnapshot snapshot = new DraftSnapshot();

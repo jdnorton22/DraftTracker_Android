@@ -18,8 +18,7 @@ import java.net.URL;
 public class ESPNDataFetcher {
     
     private static final String TAG = "PlayerDataRefresh";
-    private static final String ESPN_API_BASE_URL = "https://fantasy.espn.com/apis/v3/games/ffl/seasons/2025/segments/0/leagues/";
-    private static final String ESPN_API_PARAMS = "?view=kona_player_info";
+    private static final String PLAYER_DATA_URL = "https://jdnorton22.github.io/fantasy-draft-data/players.json";
     private static final int TIMEOUT_MILLISECONDS = 30000; // 30 seconds
     
     private Context context;
@@ -44,11 +43,10 @@ public class ESPNDataFetcher {
     }
     
     /**
-     * Fetch player data from ESPN API asynchronously.
-     * Credentials are optional - will use public endpoint if not configured.
+     * Fetch player data from GitHub Pages asynchronously.
      */
     public void fetchPlayerData(FetchCallback callback) {
-        Log.d(TAG, "Starting player data fetch");
+        Log.d(TAG, "Starting player data fetch from GitHub Pages");
         
         // Check network connectivity first
         if (!isNetworkAvailable()) {
@@ -59,7 +57,6 @@ public class ESPNDataFetcher {
         
         Log.d(TAG, "Network available, executing fetch task");
         // Execute fetch on background thread
-        // Credentials are optional - will use public data if not available
         new FetchTask(callback).execute();
     }
     
@@ -79,22 +76,11 @@ public class ESPNDataFetcher {
     }
     
     /**
-     * Build the ESPN API URL.
-     * Uses private league endpoint if credentials configured, otherwise public endpoint.
+     * Build the player data URL.
      */
     private String buildApiUrl() {
-        if (credentialsManager.hasCredentials()) {
-            // Use private league endpoint with credentials
-            String leagueId = credentialsManager.getLeagueId();
-            String url = ESPN_API_BASE_URL + leagueId + ESPN_API_PARAMS;
-            Log.d(TAG, "Using private league endpoint: " + url);
-            return url;
-        } else {
-            // Use public default league endpoint (no credentials needed)
-            String url = "https://fantasy.espn.com/apis/v3/games/ffl/seasons/2025/segments/0/leaguedefaults/3?view=kona_player_info";
-            Log.d(TAG, "Using public endpoint: " + url);
-            return url;
-        }
+        Log.d(TAG, "Using GitHub Pages endpoint: " + PLAYER_DATA_URL);
+        return PLAYER_DATA_URL;
     }
     
     /**
@@ -120,24 +106,6 @@ public class ESPNDataFetcher {
                 connection.setConnectTimeout(TIMEOUT_MILLISECONDS);
                 connection.setReadTimeout(TIMEOUT_MILLISECONDS);
                 connection.setRequestProperty("Accept", "application/json");
-                
-                // Add authentication cookies if available
-                String swid = credentialsManager.getSwid();
-                String espnS2 = credentialsManager.getEspnS2();
-                
-                if (!swid.isEmpty() || !espnS2.isEmpty()) {
-                    StringBuilder cookieHeader = new StringBuilder();
-                    if (!swid.isEmpty()) {
-                        cookieHeader.append("SWID=").append(swid);
-                    }
-                    if (!espnS2.isEmpty()) {
-                        if (cookieHeader.length() > 0) {
-                            cookieHeader.append("; ");
-                        }
-                        cookieHeader.append("espn_s2=").append(espnS2);
-                    }
-                    connection.setRequestProperty("Cookie", cookieHeader.toString());
-                }
                 
                 int responseCode = connection.getResponseCode();
                 Log.d(TAG, "HTTP Response code: " + responseCode);
@@ -172,7 +140,7 @@ public class ESPNDataFetcher {
             } catch (Exception e) {
                 Log.e(TAG, "Error fetching data", e);
                 return new FetchResult(null, FetchError.SERVER_UNREACHABLE, 
-                        "Unable to reach ESPN servers: " + e.getMessage());
+                        "Unable to reach server: " + e.getMessage());
                 
             } finally {
                 if (connection != null) {

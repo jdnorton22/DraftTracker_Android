@@ -13,7 +13,7 @@
     <!-- Current Pick -->
     <string name="current_pick">Current Pick</string>
     <string name="round_pick_placeholder">Round --, Pick --</string>
-    <string name="team_placeholder">Team: --</string>
+    <string name="team_placeholder">On the clock: --</string>
     <string name="make_pick">Make Pick</string>
     <string name="reset_draft">Reset Draft Board</string>
     

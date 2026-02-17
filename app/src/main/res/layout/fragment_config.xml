@@ -236,8 +236,7 @@
             android:textSize="16sp"
             android:padding="16dp" />
 
-        <!-- Refresh Player Data Button - COMMENTED OUT FOR FUTURE REVISIT -->
-        <!-- TODO: Fix button initialization issue before re-enabling
+        <!-- Refresh Player Data Button -->
         <Button
             android:id="@+id/button_refresh_player_data"
             android:layout_width="match_parent"
@@ -246,10 +245,7 @@
             android:textSize="16sp"
             android:padding="16dp"
             android:layout_marginTop="8dp"
-            android:drawableStart="@android:drawable/ic_menu_rotate"
-            android:drawablePadding="8dp"
             style="?attr/materialButtonOutlinedStyle" />
-        -->
 
     </LinearLayout>
 
