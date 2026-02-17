@@ -30,18 +30,42 @@ This release builds upon v1.6 with all previous features included and verified.
 
 ### Build Information
 - **APK Size:** 4.9 MB
+- **AAB Size:** 4.2 MB
 - **Min SDK:** 24 (Android 7.0)
 - **Target SDK:** 35 (Android 15)
 - **Signed:** Yes (release keystore)
 
-### File Location
+### File Locations
 - Release APK: `app/build/outputs/apk/release/app-release.apk`
+- Release Bundle (AAB): `app/build/outputs/bundle/release/app-release.aab`
+
+## Distribution
+
+### Google Play Store
+Use the Android App Bundle (AAB) for Play Store distribution:
+- File: `app-release.aab`
+- Size: 4.2 MB
+- Optimized for Play Store's dynamic delivery
+
+### Direct Distribution
+Use the APK for direct distribution to users:
+- File: `app-release.apk`
+- Size: 4.9 MB
+- Can be installed directly on Android devices
 
 ## Installation
+
+### From APK (Direct Install)
 1. Download the APK from the release folder
 2. Enable "Install from Unknown Sources" on your Android device
 3. Install the APK
 4. Grant necessary permissions when prompted
+
+### From Play Store (AAB)
+1. Upload the AAB to Google Play Console
+2. Complete the store listing
+3. Submit for review
+4. Users can install from Play Store once approved
 
 ## Git Tag
 This release is tagged as `v1.7` in the repository.
