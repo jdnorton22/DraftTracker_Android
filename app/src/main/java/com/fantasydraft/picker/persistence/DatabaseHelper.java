@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "fantasy_draft.db";
-    private static final int DATABASE_VERSION = 4; // Incremented for multi-draft support
+    private static final int DATABASE_VERSION = 5; // Incremented for byeWeek column
 
     // Table names
     public static final String TABLE_TEAMS = "teams";
@@ -39,6 +39,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_PLAYER_RANK = "rank";
     public static final String COLUMN_PLAYER_IS_DRAFTED = "is_drafted";
     public static final String COLUMN_PLAYER_DRAFTED_BY = "drafted_by";
+    public static final String COLUMN_PLAYER_BYE_WEEK = "bye_week";
 
     // Picks table columns
     public static final String COLUMN_PICK_NUMBER = "pick_number";
@@ -87,6 +88,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         COLUMN_PLAYER_RANK + " INTEGER NOT NULL, " +
         COLUMN_PLAYER_IS_DRAFTED + " INTEGER NOT NULL DEFAULT 0, " +
         COLUMN_PLAYER_DRAFTED_BY + " TEXT, " +
+        COLUMN_PLAYER_BYE_WEEK + " INTEGER NOT NULL DEFAULT 0, " +
         "PRIMARY KEY(" + COLUMN_DRAFT_ID + ", " + COLUMN_PLAYER_ID + ")" +
         ");";
 
@@ -219,6 +221,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 db.execSQL(CREATE_INDEX_PLAYERS_IS_DRAFTED);
                 db.execSQL(CREATE_INDEX_PICKS_PICK_NUMBER);
                 db.execSQL(CREATE_INDEX_TEAMS_DRAFT_POSITION);
+            }
+            
+            if (oldVersion < 5) {
+                // Add bye_week column to players table
+                db.execSQL("ALTER TABLE " + TABLE_PLAYERS + " ADD COLUMN " + 
+                          COLUMN_PLAYER_BYE_WEEK + " INTEGER NOT NULL DEFAULT 0");
             }
         } catch (Exception e) {
             // If migration fails, drop all tables and recreate from scratch

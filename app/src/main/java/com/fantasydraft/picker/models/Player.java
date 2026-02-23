@@ -28,6 +28,9 @@ public class Player implements Parcelable {
     
     // ESPN Player ID
     private String espnId;
+    
+    // Bye Week
+    private int byeWeek;
 
     public Player() {
     }
@@ -45,6 +48,7 @@ public class Player implements Parcelable {
         this.nflTeam = "";
         this.injuryStatus = "";
         this.espnId = "";
+        this.byeWeek = 0;
     }
 
     public Player(String id, String name, String position, int rank, boolean isDrafted, String draftedBy) {
@@ -60,6 +64,7 @@ public class Player implements Parcelable {
         this.nflTeam = "";
         this.injuryStatus = "";
         this.espnId = "";
+        this.byeWeek = 0;
     }
 
     public String getId() {
@@ -158,6 +163,14 @@ public class Player implements Parcelable {
         this.espnId = espnId;
     }
 
+    public int getByeWeek() {
+        return byeWeek;
+    }
+
+    public void setByeWeek(int byeWeek) {
+        this.byeWeek = byeWeek;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -167,6 +180,7 @@ public class Player implements Parcelable {
                 isDrafted == player.isDrafted &&
                 pffRank == player.pffRank &&
                 positionRank == player.positionRank &&
+                byeWeek == player.byeWeek &&
                 Objects.equals(id, player.id) &&
                 Objects.equals(name, player.name) &&
                 Objects.equals(position, player.position) &&
@@ -179,7 +193,7 @@ public class Player implements Parcelable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, position, rank, isDrafted, draftedBy, lastYearStats, pffRank, positionRank, nflTeam, injuryStatus, espnId);
+        return Objects.hash(id, name, position, rank, isDrafted, draftedBy, lastYearStats, pffRank, positionRank, nflTeam, injuryStatus, espnId, byeWeek);
     }
     
     // Parcelable implementation
@@ -196,6 +210,7 @@ public class Player implements Parcelable {
         nflTeam = in.readString();
         injuryStatus = in.readString();
         espnId = in.readString();
+        byeWeek = in.readInt();
     }
     
     public static final Creator<Player> CREATOR = new Creator<Player>() {
@@ -229,6 +244,7 @@ public class Player implements Parcelable {
         dest.writeString(nflTeam);
         dest.writeString(injuryStatus);
         dest.writeString(espnId);
+        dest.writeInt(byeWeek);
     }
     
     /**

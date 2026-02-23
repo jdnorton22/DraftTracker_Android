@@ -26,6 +26,7 @@ public class PlayerDAO {
         values.put(DatabaseHelper.COLUMN_PLAYER_RANK, player.getRank());
         values.put(DatabaseHelper.COLUMN_PLAYER_IS_DRAFTED, player.isDrafted() ? 1 : 0);
         values.put(DatabaseHelper.COLUMN_PLAYER_DRAFTED_BY, player.getDraftedBy());
+        values.put(DatabaseHelper.COLUMN_PLAYER_BYE_WEEK, player.getByeWeek());
 
         return db.insert(DatabaseHelper.TABLE_PLAYERS, null, values);
     }
@@ -38,6 +39,7 @@ public class PlayerDAO {
         values.put(DatabaseHelper.COLUMN_PLAYER_RANK, player.getRank());
         values.put(DatabaseHelper.COLUMN_PLAYER_IS_DRAFTED, player.isDrafted() ? 1 : 0);
         values.put(DatabaseHelper.COLUMN_PLAYER_DRAFTED_BY, player.getDraftedBy());
+        values.put(DatabaseHelper.COLUMN_PLAYER_BYE_WEEK, player.getByeWeek());
 
         return db.update(DatabaseHelper.TABLE_PLAYERS, values,
                 DatabaseHelper.COLUMN_DRAFT_ID + " = ? AND " + DatabaseHelper.COLUMN_PLAYER_ID + " = ?",
@@ -138,7 +140,10 @@ public class PlayerDAO {
         int rank = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_PLAYER_RANK));
         boolean isDrafted = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_PLAYER_IS_DRAFTED)) == 1;
         String draftedBy = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_PLAYER_DRAFTED_BY));
+        int byeWeek = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_PLAYER_BYE_WEEK));
 
-        return new Player(id, name, position, rank, isDrafted, draftedBy);
+        Player player = new Player(id, name, position, rank, isDrafted, draftedBy);
+        player.setByeWeek(byeWeek);
+        return player;
     }
 }

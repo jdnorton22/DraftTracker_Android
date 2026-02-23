@@ -60,12 +60,18 @@ public class DraftHistoryAdapter extends RecyclerView.Adapter<DraftHistoryAdapte
     public void onBindViewHolder(@NonNull PickViewHolder holder, int position) {
         Pick pick = picks.get(position);
         
-        // Display pick number
-        holder.pickNumber.setText(pick.getPickNumber() + ".");
+        // Display pick number (without the period)
+        holder.pickNumber.setText(String.valueOf(pick.getPickNumber()));
         
-        // Display team name
+        // Display team name with bye week
         Team team = teamMap != null ? teamMap.get(pick.getTeamId()) : null;
         String teamName = team != null ? team.getName() : "Unknown Team";
+        
+        // Get player to access bye week
+        Player player = playerMap != null ? playerMap.get(pick.getPlayerId()) : null;
+        if (player != null && player.getByeWeek() > 0) {
+            teamName += " (bye-" + player.getByeWeek() + ")";
+        }
         holder.teamName.setText(teamName);
         
         // Find the highest pick number (most recent pick) to show undo button
@@ -89,13 +95,15 @@ public class DraftHistoryAdapter extends RecyclerView.Adapter<DraftHistoryAdapte
         }
         
         // Display player name and position
-        Player player = playerMap != null ? playerMap.get(pick.getPlayerId()) : null;
         if (player != null) {
-            // Apply position-based background color
+            // Apply position-based color to the pick number circle
             int backgroundColor = PositionColors.getColorForPosition(player.getPosition());
-            holder.rootView.setBackgroundColor(backgroundColor);
+            android.graphics.drawable.GradientDrawable circle = new android.graphics.drawable.GradientDrawable();
+            circle.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            circle.setColor(backgroundColor);
+            holder.pickNumber.setBackground(circle);
             
-            // Display position with NFL team
+            // Display position with NFL team (no bye week here)
             String positionInfo = player.getPosition();
             if (player.getNflTeam() != null && !player.getNflTeam().isEmpty()) {
                 positionInfo += " - " + player.getNflTeam();
@@ -157,8 +165,11 @@ public class DraftHistoryAdapter extends RecyclerView.Adapter<DraftHistoryAdapte
             holder.positionRank.setVisibility(View.GONE);
             holder.playerStats.setVisibility(View.GONE);
             
-            // Reset to default background color
-            holder.rootView.setBackgroundColor(0xFFF5F5F5);
+            // Reset to default gray circle
+            android.graphics.drawable.GradientDrawable circle = new android.graphics.drawable.GradientDrawable();
+            circle.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            circle.setColor(0xFFCCCCCC);
+            holder.pickNumber.setBackground(circle);
         }
     }
 

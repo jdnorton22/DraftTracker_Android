@@ -105,6 +105,7 @@ public class PlayerDataParser {
         player.setLastYearStats(playerJson.optString("lastYearStats", ""));
         player.setInjuryStatus(playerJson.optString("injuryStatus", "HEALTHY"));
         player.setEspnId(playerJson.optString("espnId", ""));
+        player.setByeWeek(playerJson.optInt("byeWeek", 0));
         
         // Draft status defaults
         player.setDrafted(false);

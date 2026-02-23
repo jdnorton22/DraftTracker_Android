@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text colors that adapt to light/dark mode -->
+    <color name="text_primary">#000000</color>
+    <color name="text_secondary">#666666</color>
+    <color name="text_tertiary">#888888</color>
+    
+    <!-- Text color for light backgrounds (stays dark in both modes) -->
+    <color name="text_on_light_bg">#333333</color>
+</resources>

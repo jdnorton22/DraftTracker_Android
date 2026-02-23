@@ -4,18 +4,18 @@ import android.graphics.Color;
 
 /**
  * Utility class for position-based color coding following FFL standard colors.
- * Colors are subdued/pastel versions for better readability.
+ * Colors are bold and vibrant for better visual distinction.
  */
 public class PositionColors {
     
-    // Subdued position colors (lighter/pastel versions)
-    private static final int COLOR_WR = Color.parseColor("#FFE0F0");  // Light Pink
-    private static final int COLOR_QB = Color.parseColor("#FFF9E0");  // Light Yellow
-    private static final int COLOR_RB = Color.parseColor("#E0F5E0");  // Light Green
-    private static final int COLOR_TE = Color.parseColor("#FFE5E5");  // Light Red
-    private static final int COLOR_DST = Color.parseColor("#FFE8D5"); // Light Orange
-    private static final int COLOR_K = Color.parseColor("#E0EFFF");   // Light Blue
-    private static final int COLOR_DEFAULT = Color.parseColor("#F5F5F5"); // Light Gray
+    // Bold position colors
+    private static final int COLOR_WR = Color.parseColor("#E91E63");  // Material Pink
+    private static final int COLOR_QB = Color.parseColor("#FFD700");  // Gold
+    private static final int COLOR_RB = Color.parseColor("#32CD32");  // Lime Green
+    private static final int COLOR_TE = Color.parseColor("#FF4500");  // Orange Red
+    private static final int COLOR_DST = Color.parseColor("#FF8C00"); // Dark Orange
+    private static final int COLOR_K = Color.parseColor("#1E90FF");   // Dodger Blue
+    private static final int COLOR_DEFAULT = Color.parseColor("#9E9E9E"); // Gray
     
     /**
      * Get the background color for a given position.
@@ -55,25 +55,25 @@ public class PositionColors {
      */
     public static int getDarkColorForPosition(String position) {
         if (position == null) {
-            return Color.GRAY;
+            return Color.DKGRAY;
         }
         
         switch (position.toUpperCase()) {
             case "WR":
-                return Color.parseColor("#FF69B4"); // Hot Pink
+                return Color.parseColor("#C71585"); // Medium Violet Red
             case "QB":
-                return Color.parseColor("#FFD700"); // Gold
+                return Color.parseColor("#DAA520"); // Goldenrod
             case "RB":
-                return Color.parseColor("#32CD32"); // Lime Green
+                return Color.parseColor("#228B22"); // Forest Green
             case "TE":
                 return Color.parseColor("#DC143C"); // Crimson
             case "DST":
             case "DEF":
-                return Color.parseColor("#FF8C00"); // Dark Orange
+                return Color.parseColor("#D2691E"); // Chocolate
             case "K":
-                return Color.parseColor("#4169E1"); // Royal Blue
+                return Color.parseColor("#1874CD"); // Dodger Blue 3
             default:
-                return Color.GRAY;
+                return Color.DKGRAY;
         }
     }
 }

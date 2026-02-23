@@ -2,6 +2,7 @@ package com.fantasydraft.picker.ui;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,6 +25,7 @@ import com.fantasydraft.picker.managers.PlayerDataRefreshManager;
 import com.fantasydraft.picker.models.DraftConfig;
 import com.fantasydraft.picker.models.FlowType;
 import com.fantasydraft.picker.models.Team;
+import com.fantasydraft.picker.utils.PlayerDataParser;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
@@ -49,10 +51,14 @@ public class ConfigFragment extends Fragment {
     private CheckBox checkboxSkipFirstRound;
     private RecyclerView recyclerTeams;
     private Button buttonSaveConfig;
+    private Button buttonImportPlayers;
     private Button buttonRefreshPlayerData;
     
     // Adapter
     private TeamConfigAdapter teamAdapter;
+    
+    // File picker request code
+    private static final int PICK_JSON_FILE = 1;
     
     @Nullable
     @Override
@@ -70,6 +76,7 @@ public class ConfigFragment extends Fragment {
         setupSpinner();
         setupRecyclerView();
         setupSaveButton();
+        setupImportButton();
         setupRefreshButton();
         
         return view;
@@ -169,6 +176,7 @@ public class ConfigFragment extends Fragment {
         checkboxSkipFirstRound = view.findViewById(R.id.checkbox_skip_first_round);
         recyclerTeams = view.findViewById(R.id.recycler_teams);
         buttonSaveConfig = view.findViewById(R.id.button_save_config);
+        buttonImportPlayers = view.findViewById(R.id.button_import_players);
         buttonRefreshPlayerData = view.findViewById(R.id.button_refresh_player_data);
     }
     
@@ -350,11 +358,169 @@ public class ConfigFragment extends Fragment {
     }
     
     /**
+     * Set up the import players button.
+     */
+    private void setupImportButton() {
+        if (buttonImportPlayers != null) {
+            // Check feature flag
+            if (com.fantasydraft.picker.utils.FeatureFlags.ENABLE_IMPORT_PLAYERS) {
+                buttonImportPlayers.setVisibility(View.VISIBLE);
+                buttonImportPlayers.setOnClickListener(v -> openFilePicker());
+            } else {
+                buttonImportPlayers.setVisibility(View.GONE);
+            }
+        }
+    }
+    
+    /**
+     * Open file picker to select players.json file.
+     */
+    private void openFilePicker() {
+        // Try ACTION_GET_CONTENT first (more compatible)
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        
+        // Add extra MIME types
+        String[] mimeTypes = {"application/json", "text/plain", "application/octet-stream"};
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+        
+        try {
+            startActivityForResult(Intent.createChooser(intent, "Select players.json file"), PICK_JSON_FILE);
+        } catch (android.content.ActivityNotFoundException e) {
+            if (getContext() != null) {
+                Toast.makeText(getContext(), "No file picker app found. Please install a file manager.", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+    
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        
+        if (requestCode == PICK_JSON_FILE) {
+            if (resultCode == Activity.RESULT_OK) {
+                if (data != null && data.getData() != null) {
+                    android.net.Uri uri = data.getData();
+                    importPlayersFromUri(uri);
+                } else {
+                    Toast.makeText(getContext(), "No file selected", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    }
+    
+    /**
+     * Import players from the selected file URI.
+     */
+    private void importPlayersFromUri(android.net.Uri uri) {
+        MainActivity mainActivity = getMainActivity();
+        if (mainActivity == null) {
+            return;
+        }
+        
+        try {
+            // Read file content
+            java.io.InputStream inputStream = mainActivity.getContentResolver().openInputStream(uri);
+            if (inputStream == null) {
+                Toast.makeText(mainActivity, "Failed to open file", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            // Read the entire file into a string
+            java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(inputStream));
+            StringBuilder stringBuilder = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+            reader.close();
+            inputStream.close();
+            
+            String jsonContent = stringBuilder.toString();
+            
+            // Parse and validate the JSON
+            PlayerDataParser parser = new PlayerDataParser();
+            List<com.fantasydraft.picker.models.Player> players = null;
+            
+            try {
+                players = parser.parseESPNData(jsonContent);
+            } catch (PlayerDataParser.ParseException e) {
+                // Show detailed error dialog
+                new AlertDialog.Builder(mainActivity)
+                        .setTitle("Parse Error")
+                        .setMessage("Failed to parse player data:\n\n" + e.getMessage() + 
+                                "\n\nPlease ensure your JSON file:\n" +
+                                "- Is a valid JSON array\n" +
+                                "- Contains at least 10 players\n" +
+                                "- Each player has: id, name, position, rank")
+                        .setPositiveButton("OK", null)
+                        .show();
+                return;
+            }
+            
+            if (players == null || players.isEmpty()) {
+                Toast.makeText(mainActivity, "No valid player data found in file", Toast.LENGTH_LONG).show();
+                return;
+            }
+            
+            // Save to internal storage
+            savePlayersToInternalStorage(jsonContent);
+            
+            // Show success message
+            String message = "Successfully imported " + players.size() + " players. " +
+                    "Restart the app or reset the draft to use the new data.";
+            new AlertDialog.Builder(mainActivity)
+                    .setTitle("Import Successful")
+                    .setMessage(message)
+                    .setPositiveButton("OK", null)
+                    .show();
+            
+        } catch (java.io.IOException e) {
+            // Show detailed error dialog
+            new AlertDialog.Builder(mainActivity)
+                    .setTitle("File Read Error")
+                    .setMessage("Failed to read file:\n\n" + e.getMessage())
+                    .setPositiveButton("OK", null)
+                    .show();
+        } catch (Exception e) {
+            // Show detailed error dialog
+            new AlertDialog.Builder(mainActivity)
+                    .setTitle("Import Failed")
+                    .setMessage("Unexpected error: " + e.getMessage())
+                    .setPositiveButton("OK", null)
+                    .show();
+        }
+    }
+    
+    /**
+     * Save players JSON to internal storage.
+     */
+    private void savePlayersToInternalStorage(String jsonContent) throws java.io.IOException {
+        MainActivity mainActivity = getMainActivity();
+        if (mainActivity == null) {
+            return;
+        }
+        
+        // Save as players_updated.json so the app will load it on next start
+        java.io.File file = new java.io.File(mainActivity.getFilesDir(), "players_updated.json");
+        java.io.FileWriter writer = new java.io.FileWriter(file);
+        writer.write(jsonContent);
+        writer.close();
+    }
+    
+    /**
      * Set up the refresh player data button.
      */
     private void setupRefreshButton() {
         if (buttonRefreshPlayerData != null) {
-            buttonRefreshPlayerData.setOnClickListener(v -> showRefreshConfirmationDialog());
+            // Check feature flag
+            if (com.fantasydraft.picker.utils.FeatureFlags.ENABLE_REFRESH_PLAYER_DATA) {
+                buttonRefreshPlayerData.setVisibility(View.VISIBLE);
+                buttonRefreshPlayerData.setOnClickListener(v -> showRefreshConfirmationDialog());
+            } else {
+                buttonRefreshPlayerData.setVisibility(View.GONE);
+            }
         }
     }
     

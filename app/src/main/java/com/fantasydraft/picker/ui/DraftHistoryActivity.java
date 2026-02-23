@@ -16,6 +16,7 @@ import com.fantasydraft.picker.models.Pick;
 import com.fantasydraft.picker.models.Player;
 import com.fantasydraft.picker.models.Team;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +36,7 @@ public class DraftHistoryActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private DraftHistoryAdapter adapter;
     private Button buttonClose;
+    private Button buttonExportCsv;
     private Button buttonSort;
     private Spinner spinnerTeamFilter;
     
@@ -73,6 +75,7 @@ public class DraftHistoryActivity extends AppCompatActivity {
     private void initializeViews() {
         recyclerView = findViewById(R.id.recycler_draft_history);
         buttonClose = findViewById(R.id.button_close);
+        buttonExportCsv = findViewById(R.id.button_export_csv);
         buttonSort = findViewById(R.id.button_sort);
         spinnerTeamFilter = findViewById(R.id.spinner_team_filter);
 
@@ -228,5 +231,53 @@ public class DraftHistoryActivity extends AppCompatActivity {
     private void setupClickHandlers() {
         buttonClose.setOnClickListener(v -> finish());
         buttonSort.setOnClickListener(v -> toggleSort());
+        buttonExportCsv.setOnClickListener(v -> exportToCsv());
+    }
+    
+    private void exportToCsv() {
+        try {
+            // Get all picks (not just filtered ones) for export
+            ArrayList<Pick> picksToExport = new ArrayList<>(allPicks);
+            ArrayList<Team> teams = new ArrayList<>(teamMap.values());
+            ArrayList<Player> players = new ArrayList<>(playerMap.values());
+            
+            // Use DraftCsvExporter to export
+            File csvFile = com.fantasydraft.picker.utils.DraftCsvExporter.exportToCSV(
+                    this,
+                    picksToExport,
+                    teams,
+                    players,
+                    "Draft"
+            );
+            
+            // Show success message and open file
+            android.widget.Toast.makeText(this, "Draft exported successfully!", android.widget.Toast.LENGTH_SHORT).show();
+            openCsvFile(csvFile);
+            
+        } catch (Exception e) {
+            android.widget.Toast.makeText(this, "Error exporting: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+        }
+    }
+    
+    private void openCsvFile(java.io.File csvFile) {
+        try {
+            // Create a content URI using FileProvider
+            android.net.Uri fileUri = androidx.core.content.FileProvider.getUriForFile(
+                    this,
+                    "com.fantasydraft.picker.fileprovider",
+                    csvFile
+            );
+            
+            // Create intent to view the file
+            android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW);
+            intent.setDataAndType(fileUri, "text/plain");
+            intent.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+            
+            startActivity(android.content.Intent.createChooser(intent, "Open CSV file"));
+            
+        } catch (Exception e) {
+            android.widget.Toast.makeText(this, "File saved to: " + csvFile.getAbsolutePath(), android.widget.Toast.LENGTH_LONG).show();
+        }
     }
 }

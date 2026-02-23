@@ -234,6 +234,17 @@
             android:textSize="16sp"
             android:padding="16dp" />
 
+        <!-- Import Players Button -->
+        <Button
+            android:id="@+id/button_import_players"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Import Players"
+            android:textSize="16sp"
+            android:padding="16dp"
+            android:layout_marginTop="8dp"
+            style="?attr/materialButtonOutlinedStyle" />
+
         <!-- Refresh Player Data Button - COMMENTED OUT FOR FUTURE REVISIT -->
         <!-- TODO: Fix button initialization issue before re-enabling
         <Button

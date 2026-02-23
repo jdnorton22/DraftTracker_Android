@@ -157,6 +157,10 @@ public class PlayerDataLoader {
                 player.setEspnId(playerJson.getString("espnId"));
             }
             
+            if (playerJson.has("byeWeek")) {
+                player.setByeWeek(playerJson.getInt("byeWeek"));
+            }
+            
             players.add(player);
         }
 

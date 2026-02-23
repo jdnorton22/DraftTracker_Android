@@ -130,7 +130,7 @@ public class PlayerSelectionAdapter extends RecyclerView.Adapter<PlayerSelection
 
     static class PlayerViewHolder extends RecyclerView.ViewHolder {
         private View rootView;
-        private TextView rankText;
+        private TextView positionBadgeText;
         private TextView pffRankText;
         private TextView positionRankText;
         private TextView nameText;
@@ -142,7 +142,7 @@ public class PlayerSelectionAdapter extends RecyclerView.Adapter<PlayerSelection
         public PlayerViewHolder(@NonNull View itemView) {
             super(itemView);
             rootView = itemView.findViewById(R.id.player_item_root);
-            rankText = itemView.findViewById(R.id.player_rank);
+            positionBadgeText = itemView.findViewById(R.id.player_position_badge);
             pffRankText = itemView.findViewById(R.id.player_pff_rank);
             positionRankText = itemView.findViewById(R.id.player_position_rank);
             nameText = itemView.findViewById(R.id.player_name);
@@ -153,24 +153,37 @@ public class PlayerSelectionAdapter extends RecyclerView.Adapter<PlayerSelection
         }
 
         public void bind(Player player, OnPlayerClickListener listener) {
-            // Apply position-based background color
-            int backgroundColor = PositionColors.getColorForPosition(player.getPosition());
-            rootView.setBackgroundColor(backgroundColor);
+            // Remove position-based background color from root
+            rootView.setBackgroundColor(0x00000000); // Transparent
             
-            rankText.setText(String.valueOf(player.getRank()));
+            // Set position badge with color
+            positionBadgeText.setText(player.getPosition());
+            android.graphics.drawable.GradientDrawable badgeCircle = new android.graphics.drawable.GradientDrawable();
+            badgeCircle.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            badgeCircle.setColor(PositionColors.getColorForPosition(player.getPosition()));
+            positionBadgeText.setBackground(badgeCircle);
+            
             nameText.setText(player.getName());
             
             // ESPN links disabled - display name as plain text
-            nameText.setTextColor(0xFF000000); // Black color
+            nameText.setTextColor(itemView.getContext().getResources().getColor(R.color.text_primary, null));
             nameText.setPaintFlags(nameText.getPaintFlags() & ~android.graphics.Paint.UNDERLINE_TEXT_FLAG);
             nameText.setOnClickListener(null);
             
-            // Display position with NFL team
-            String positionDisplay = player.getPosition();
+            // Display just the NFL team (no position code)
             if (player.getNflTeam() != null && !player.getNflTeam().isEmpty()) {
-                positionDisplay += " - " + player.getNflTeam();
+                String teamInfo = player.getNflTeam();
+                if (player.getByeWeek() > 0) {
+                    teamInfo += " (bye-" + player.getByeWeek() + ")";
+                }
+                positionText.setText(teamInfo);
+                positionText.setVisibility(View.VISIBLE);
+            } else if (player.getByeWeek() > 0) {
+                positionText.setText("(bye-" + player.getByeWeek() + ")");
+                positionText.setVisibility(View.VISIBLE);
+            } else {
+                positionText.setVisibility(View.GONE);
             }
-            positionText.setText(positionDisplay);
             
             // Display ADP rank
             if (player.getPffRank() > 0) {

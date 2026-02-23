@@ -12,67 +12,81 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
-        <LinearLayout
-            android:layout_width="60dp"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center">
-
-            <TextView
-                android:id="@+id/player_rank"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="1"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:gravity="center" />
-
-            <TextView
-                android:id="@+id/player_pff_rank"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="ADP:1"
-                android:textSize="10sp"
-                android:textColor="#000080"
-                android:gravity="center" />
-
-            <TextView
-                android:id="@+id/player_position_rank"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="RB1"
-                android:textSize="10sp"
-                android:textColor="#000080"
-                android:gravity="center" />
-
-        </LinearLayout>
+        <TextView
+            android:id="@+id/player_position_badge"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="QB"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:gravity="center"
+            android:background="@drawable/circle_position_badge"
+            android:layout_marginEnd="8dp" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:layout_marginStart="8dp">
+            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/player_name"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Player Name"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:maxLines="1"
-                android:ellipsize="end" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-            <TextView
-                android:id="@+id/player_position"
-                android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/player_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Player Name"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="QB"
-                android:textSize="12sp"
-                android:textColor="#000080" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/player_position"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DAL"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/player_pff_rank"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ADP:1"
+                    android:textSize="10sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginStart="8dp"
+                    android:gravity="center" />
+
+                <TextView
+                    android:id="@+id/player_position_rank"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="RB1"
+                    android:textSize="10sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginStart="4dp"
+                    android:gravity="center" />
+
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/player_stats"
@@ -80,7 +94,7 @@
                 android:layout_height="wrap_content"
                 android:text="Last Year: 300 YDS, 3 TD"
                 android:textSize="11sp"
-                android:textColor="#000080"
+                android:textColor="@color/text_secondary"
                 android:layout_marginTop="2dp" />
 
             <TextView
@@ -104,7 +118,8 @@
             android:textColor="@android:color/holo_red_dark"
             android:textStyle="bold"
             android:visibility="gone"
-            android:layout_gravity="center_vertical" />
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="8dp" />
 
     </LinearLayout>
 

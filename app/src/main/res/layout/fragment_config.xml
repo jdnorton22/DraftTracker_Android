@@ -236,16 +236,115 @@
             android:textSize="16sp"
             android:padding="16dp" />
 
-        <!-- Refresh Player Data Button -->
-        <Button
-            android:id="@+id/button_refresh_player_data"
+        <!-- Refresh Player Data Section -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Refresh Player Data"
-            android:textSize="16sp"
-            android:padding="16dp"
-            android:layout_marginTop="8dp"
-            style="?attr/materialButtonOutlinedStyle" />
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Refresh Player Data"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="⚠️ Player data is updated monthly. This will download the latest available rankings and reset your current draft."
+                    android:textSize="13sp"
+                    android:layout_marginBottom="12dp" />
+
+                <Button
+                    android:id="@+id/button_refresh_player_data"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Refresh Player Data"
+                    android:textSize="14sp"
+                    style="?attr/materialButtonOutlinedStyle" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Import Players Section -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Import Custom Player Data"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Upload a custom players.json file to use your own player rankings and data."
+                    android:textSize="14sp"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="File Format Requirements:"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="• JSON array format\n• Minimum 10 players\n• Required fields: id, name, position, rank\n• Optional: pffRank, positionRank, nflTeam, lastYearStats, injuryStatus, espnId, byeWeek"
+                    android:textSize="12sp"
+                    android:lineSpacingExtra="2dp"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Example:\n[{\n  &quot;id&quot;: 10000,\n  &quot;name&quot;: &quot;Christian McCaffrey&quot;,\n  &quot;position&quot;: &quot;RB&quot;,\n  &quot;nflTeam&quot;: &quot;SF&quot;,\n  &quot;rank&quot;: 1,\n  &quot;pffRank&quot;: 1,\n  &quot;positionRank&quot;: 1,\n  &quot;lastYearStats&quot;: &quot;202 rush yds, 0 rush TDs, 15 rec, 146 rec yds&quot;,\n  &quot;injuryStatus&quot;: &quot;QUESTIONABLE&quot;,\n  &quot;espnId&quot;: &quot;3117251&quot;,\n  &quot;byeWeek&quot;: 7\n}]"
+                    android:textSize="11sp"
+                    android:fontFamily="monospace"
+                    android:background="#F5F5F5"
+                    android:padding="8dp"
+                    android:layout_marginBottom="12dp" />
+
+                <Button
+                    android:id="@+id/button_import_players"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Import Players"
+                    android:textSize="14sp"
+                    style="?attr/materialButtonOutlinedStyle" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
 
     </LinearLayout>
 
