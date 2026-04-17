@@ -40,6 +40,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="League Name"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />
@@ -47,12 +48,15 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Enter league name">
+                    android:hint="Enter league name"
+                    android:textColorHint="#666666">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/input_league_name"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:textColor="#000000"
+                        android:textColorHint="#666666"
                         android:inputType="text"
                         android:maxLines="1" />
 

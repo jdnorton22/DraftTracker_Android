@@ -7,4 +7,19 @@
     
     <!-- Text color for light backgrounds (stays dark in both modes) -->
     <color name="text_on_light_bg">#333333</color>
+    
+    <!-- Code block background -->
+    <color name="code_block_background">#F5F5F5</color>
+    
+    <!-- Toggle slider background -->
+    <color name="toggle_background">#E0E0E0</color>
+    
+    <!-- Primary color for toolbar -->
+    <color name="colorPrimary">#2E7D32</color>
+    
+    <!-- Favorite player highlight -->
+    <color name="favorite_highlight">#FFFFF9C4</color>
+    
+    <!-- Text color on favorite highlight (dark for light mode) -->
+    <color name="text_on_favorite">#333333</color>
 </resources>

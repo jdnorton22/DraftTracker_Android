@@ -157,9 +157,17 @@ public class PersistenceManager {
                     if (skipFirstRoundIndex >= 0) {
                         skipFirstRound = cursor.getInt(skipFirstRoundIndex) == 1;
                     }
+                    
+                    // Load stopwatch enabled (with fallback for older database versions)
+                    boolean stopwatchEnabled = false;
+                    int stopwatchIndex = cursor.getColumnIndex(DatabaseHelper.COLUMN_STATE_STOPWATCH_ENABLED);
+                    if (stopwatchIndex >= 0) {
+                        stopwatchEnabled = cursor.getInt(stopwatchIndex) == 1;
+                    }
 
                     draftState = new DraftState(currentRound, currentPickInRound, isComplete);
                     draftConfig = new DraftConfig(FlowType.valueOf(flowTypeStr), numberOfRounds, leagueName, skipFirstRound);
+                    draftConfig.setStopwatchEnabled(stopwatchEnabled);
                 } catch (IllegalArgumentException e) {
                     cursor.close();
                     throw new PersistenceException("Draft data is corrupted", 
@@ -229,6 +237,7 @@ public class PersistenceManager {
         values.put(DatabaseHelper.COLUMN_STATE_NUMBER_OF_ROUNDS, draftConfig.getNumberOfRounds());
         values.put(DatabaseHelper.COLUMN_STATE_LEAGUE_NAME, draftConfig.getLeagueName());
         values.put(DatabaseHelper.COLUMN_STATE_SKIP_FIRST_ROUND, draftConfig.isSkipFirstRound() ? 1 : 0);
+        values.put(DatabaseHelper.COLUMN_STATE_STOPWATCH_ENABLED, draftConfig.isStopwatchEnabled() ? 1 : 0);
 
         db.insert(DatabaseHelper.TABLE_DRAFT_STATE, null, values);
     }

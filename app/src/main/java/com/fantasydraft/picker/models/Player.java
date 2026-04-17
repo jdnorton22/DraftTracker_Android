@@ -32,7 +32,11 @@ public class Player implements Parcelable {
     // Bye Week
     private int byeWeek;
 
+    // Favorite
+    private boolean favorite;
+
     public Player() {
+        this.favorite = false;
     }
 
     public Player(String id, String name, String position, int rank) {
@@ -49,6 +53,7 @@ public class Player implements Parcelable {
         this.injuryStatus = "";
         this.espnId = "";
         this.byeWeek = 0;
+        this.favorite = false;
     }
 
     public Player(String id, String name, String position, int rank, boolean isDrafted, String draftedBy) {
@@ -65,6 +70,7 @@ public class Player implements Parcelable {
         this.injuryStatus = "";
         this.espnId = "";
         this.byeWeek = 0;
+        this.favorite = false;
     }
 
     public String getId() {
@@ -171,6 +177,14 @@ public class Player implements Parcelable {
         this.byeWeek = byeWeek;
     }
 
+    public boolean isFavorite() {
+        return favorite;
+    }
+
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -181,6 +195,7 @@ public class Player implements Parcelable {
                 pffRank == player.pffRank &&
                 positionRank == player.positionRank &&
                 byeWeek == player.byeWeek &&
+                favorite == player.favorite &&
                 Objects.equals(id, player.id) &&
                 Objects.equals(name, player.name) &&
                 Objects.equals(position, player.position) &&
@@ -193,7 +208,7 @@ public class Player implements Parcelable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, position, rank, isDrafted, draftedBy, lastYearStats, pffRank, positionRank, nflTeam, injuryStatus, espnId, byeWeek);
+        return Objects.hash(id, name, position, rank, isDrafted, draftedBy, lastYearStats, pffRank, positionRank, nflTeam, injuryStatus, espnId, byeWeek, favorite);
     }
     
     // Parcelable implementation
@@ -211,6 +226,7 @@ public class Player implements Parcelable {
         injuryStatus = in.readString();
         espnId = in.readString();
         byeWeek = in.readInt();
+        favorite = in.readByte() != 0;
     }
     
     public static final Creator<Player> CREATOR = new Creator<Player>() {
@@ -245,6 +261,7 @@ public class Player implements Parcelable {
         dest.writeString(injuryStatus);
         dest.writeString(espnId);
         dest.writeInt(byeWeek);
+        dest.writeByte((byte) (favorite ? 1 : 0));
     }
     
     /**
@@ -256,5 +273,65 @@ public class Player implements Parcelable {
             return "https://www.espn.com/nfl/player/_/id/" + espnId;
         }
         return null;
+    }
+    
+    /**
+     * Get the ESPN depth chart URL for the player's NFL team
+     * @return ESPN depth chart URL for the team, or null if no team is set
+     */
+    public String getEspnDepthChartUrl() {
+        if (nflTeam != null && !nflTeam.isEmpty()) {
+            // Map team abbreviations to ESPN team names
+            String espnTeamName = getEspnTeamName(nflTeam);
+            if (espnTeamName != null) {
+                return "https://www.espn.com/nfl/team/depth/_/name/" + espnTeamName;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Convert NFL team abbreviation to ESPN team name format
+     * @param teamAbbr Team abbreviation (e.g., "SF", "KC")
+     * @return ESPN team name (e.g., "sf", "kc"), or null if unknown
+     */
+    private static String getEspnTeamName(String teamAbbr) {
+        if (teamAbbr == null) return null;
+        
+        switch (teamAbbr.toUpperCase()) {
+            case "ARI": return "ari";
+            case "ATL": return "atl";
+            case "BAL": return "bal";
+            case "BUF": return "buf";
+            case "CAR": return "car";
+            case "CHI": return "chi";
+            case "CIN": return "cin";
+            case "CLE": return "cle";
+            case "DAL": return "dal";
+            case "DEN": return "den";
+            case "DET": return "det";
+            case "GB": return "gb";
+            case "HOU": return "hou";
+            case "IND": return "ind";
+            case "JAX": return "jax";
+            case "KC": return "kc";
+            case "LV": return "lv";
+            case "LAC": return "lac";
+            case "LAR": return "lar";
+            case "MIA": return "mia";
+            case "MIN": return "min";
+            case "NE": return "ne";
+            case "NO": return "no";
+            case "NYG": return "nyg";
+            case "NYJ": return "nyj";
+            case "PHI": return "phi";
+            case "PIT": return "pit";
+            case "SF": return "sf";
+            case "SEA": return "sea";
+            case "TB": return "tb";
+            case "TEN": return "ten";
+            case "WAS": return "wsh";
+            default: return null;
+        }
     }
 }

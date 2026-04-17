@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="10dp"
+    android:background="?attr/selectableItemBackground">
+
+    <!-- Row 1: Position badge, Player Name, Round/Pick -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/text_position"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:text="QB"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:gravity="center"
+            android:background="@drawable/circle_position_badge"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/text_player_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Player Name"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/text_round_pick"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="R1 P1"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginStart="8dp" />
+
+    </LinearLayout>
+
+    <!-- Row 2: NFL Team, Rankings, Bye week -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="3dp"
+        android:paddingStart="40dp">
+
+        <TextView
+            android:id="@+id/text_nfl_team"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="DAL"
+            android:textSize="11sp"
+            android:textColor="@color/text_secondary" />
+
+        <TextView
+            android:id="@+id/text_overall_rank"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Rank: 1"
+            android:textSize="10sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginStart="8dp" />
+
+        <TextView
+            android:id="@+id/text_pff_rank"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PFF: 1"
+            android:textSize="10sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginStart="8dp" />
+
+        <TextView
+            android:id="@+id/text_position_rank"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="QB1"
+            android:textSize="10sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginStart="8dp" />
+
+        <TextView
+            android:id="@+id/text_bye_week"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bye: 7"
+            android:textSize="10sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginStart="8dp" />
+
+    </LinearLayout>
+
+    <!-- Row 3: Last year stats, Injury, ESPN link -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="2dp"
+        android:paddingStart="40dp">
+
+        <TextView
+            android:id="@+id/text_last_year_stats"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Last Year: 300 YDS, 3 TD"
+            android:textSize="10sp"
+            android:textColor="@color/text_secondary"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/text_injury_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="OUT"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/holo_red_dark"
+            android:layout_marginStart="6dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/text_espn_link"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ESPN"
+            android:textSize="10sp"
+            android:textColor="#2196F3"
+            android:textStyle="bold"
+            android:layout_marginStart="6dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless" />
+
+    </LinearLayout>
+
+</LinearLayout>

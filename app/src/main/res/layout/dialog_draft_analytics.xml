@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Draft analytics dialog shown after draft completion -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/spacing_large">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="@dimen/spacing_large">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Draft Grade"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary" />
+
+            <ImageButton
+                android:id="@+id/button_close_analytics"
+                android:layout_width="@dimen/min_touch_target"
+                android:layout_height="@dimen/min_touch_target"
+                android:src="@drawable/ic_close"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Close analytics"
+                android:scaleType="centerInside"
+                android:padding="@dimen/spacing_medium" />
+
+        </LinearLayout>
+
+        <!-- Team Selector -->
+        <Spinner
+            android:id="@+id/spinner_team_selector_analytics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_medium"
+            android:minHeight="48dp" />
+
+        <!-- Overall Grade Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_medium"
+            app:cardCornerRadius="@dimen/card_corner_radius"
+            app:cardElevation="@dimen/card_elevation"
+            app:cardBackgroundColor="#F0F8FF">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_large"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/text_team_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Team Name"
+                    android:textSize="@dimen/text_size_large"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="@dimen/spacing_small" />
+
+                <TextView
+                    android:id="@+id/text_overall_grade"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="A-"
+                    android:textSize="72sp"
+                    android:textStyle="bold"
+                    android:textColor="#2E7D32"
+                    android:layout_marginBottom="@dimen/spacing_tiny" />
+
+                <TextView
+                    android:id="@+id/text_grade_score"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="82.5 / 100"
+                    android:textSize="@dimen/text_size_body"
+                    android:textColor="@color/text_secondary" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Draft Strategy -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_medium"
+            app:cardCornerRadius="@dimen/card_corner_radius"
+            app:cardElevation="@dimen/card_elevation">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_medium">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Draft Strategy"
+                    android:textSize="@dimen/text_size_title"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="@dimen/spacing_small" />
+
+                <TextView
+                    android:id="@+id/text_draft_strategy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Balanced Approach"
+                    android:textSize="@dimen/text_size_large"
+                    android:textColor="#4682B4"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Key Stats -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_medium"
+            app:cardCornerRadius="@dimen/card_corner_radius"
+            app:cardElevation="@dimen/card_elevation">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_medium">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Key Stats"
+                    android:textSize="@dimen/text_size_title"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="@dimen/spacing_medium" />
+
+                <!-- Value Picks -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="@dimen/spacing_small">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Value Picks"
+                        android:textSize="@dimen/text_size_body"
+                        android:textColor="@color/text_secondary" />
+
+                    <TextView
+                        android:id="@+id/text_value_picks"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="5"
+                        android:textSize="@dimen/text_size_body"
+                        android:textStyle="bold"
+                        android:textColor="#2E7D32" />
+
+                </LinearLayout>
+
+                <!-- Reach Picks -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="@dimen/spacing_small">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Reach Picks"
+                        android:textSize="@dimen/text_size_body"
+                        android:textColor="@color/text_secondary" />
+
+                    <TextView
+                        android:id="@+id/text_reach_picks"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="2"
+                        android:textSize="@dimen/text_size_body"
+                        android:textStyle="bold"
+                        android:textColor="#D32F2F" />
+
+                </LinearLayout>
+
+                <!-- Average ADP Difference -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Avg. ADP Difference"
+                        android:textSize="@dimen/text_size_body"
+                        android:textColor="@color/text_secondary" />
+
+                    <TextView
+                        android:id="@+id/text_avg_adp_diff"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+8.3"
+                        android:textSize="@dimen/text_size_body"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Best/Worst Picks -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_medium"
+            app:cardCornerRadius="@dimen/card_corner_radius"
+            app:cardElevation="@dimen/card_elevation">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_medium">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Notable Picks"
+                    android:textSize="@dimen/text_size_title"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="@dimen/spacing_medium" />
+
+                <!-- Best Pick -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="@dimen/spacing_small">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🏆 Best Value: "
+                        android:textSize="@dimen/text_size_body"
+                        android:textColor="@color/text_secondary" />
+
+                    <TextView
+                        android:id="@+id/text_best_pick"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Player Name"
+                        android:textSize="@dimen/text_size_body"
+                        android:textStyle="bold"
+                        android:textColor="#2E7D32" />
+
+                </LinearLayout>
+
+                <!-- Worst Pick -->
+                <LinearLayout
+                    android:id="@+id/layout_worst_pick"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="⚠️ Biggest Reach: "
+                        android:textSize="@dimen/text_size_body"
+                        android:textColor="@color/text_secondary" />
+
+                    <TextView
+                        android:id="@+id/text_worst_pick"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Player Name"
+                        android:textSize="@dimen/text_size_body"
+                        android:textStyle="bold"
+                        android:textColor="#D32F2F" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Position Distribution -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_medium"
+            app:cardCornerRadius="@dimen/card_corner_radius"
+            app:cardElevation="@dimen/card_elevation">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_medium">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Position Distribution"
+                    android:textSize="@dimen/text_size_title"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="@dimen/spacing_medium" />
+
+                <LinearLayout
+                    android:id="@+id/layout_position_distribution"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Action Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="@dimen/spacing_medium">
+
+            <Button
+                android:id="@+id/button_share_results"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Share Results"
+                android:textAllCaps="false"
+                android:minHeight="@dimen/min_touch_target"
+                android:layout_marginEnd="@dimen/spacing_small" />
+
+            <Button
+                android:id="@+id/button_view_full_draft"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="View Draft"
+                android:textAllCaps="false"
+                android:minHeight="@dimen/min_touch_target"
+                android:layout_marginStart="@dimen/spacing_small" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

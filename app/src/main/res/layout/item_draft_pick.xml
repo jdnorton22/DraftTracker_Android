@@ -1,13 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/draft_pick_item_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="60dp"
-    android:orientation="horizontal"
-    android:padding="8dp"
-    android:gravity="center_vertical"
-    android:background="?attr/selectableItemBackground">
+    android:orientation="vertical">
+
+    <!-- Round Header Badge (shown at first pick of each round) -->
+    <TextView
+        android:id="@+id/text_round_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Round 1"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:background="#4682B4"
+        android:padding="6dp"
+        android:paddingStart="12dp"
+        android:gravity="center_vertical"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/draft_pick_item_root"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="60dp"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical"
+        android:background="?attr/selectableItemBackground">
 
     <TextView
         android:id="@+id/text_pick_number"
@@ -51,6 +71,34 @@
             android:text="RB1"
             android:textSize="9sp"
             android:textColor="@color/text_secondary" />
+
+    </LinearLayout>
+
+    <!-- Value Indicator -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_marginStart="4dp">
+
+        <TextView
+            android:id="@+id/text_value_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/text_value_score"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="9sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
     </LinearLayout>
 
@@ -115,5 +163,7 @@
         android:scaleType="fitCenter"
         android:padding="8dp"
         android:layout_marginStart="4dp" />
+
+    </LinearLayout>
 
 </LinearLayout>

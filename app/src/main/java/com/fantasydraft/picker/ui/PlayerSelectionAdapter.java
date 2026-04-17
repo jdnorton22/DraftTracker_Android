@@ -1,11 +1,14 @@
 package com.fantasydraft.picker.ui;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fantasydraft.picker.R;
@@ -153,8 +156,12 @@ public class PlayerSelectionAdapter extends RecyclerView.Adapter<PlayerSelection
         }
 
         public void bind(Player player, OnPlayerClickListener listener) {
-            // Remove position-based background color from root
-            rootView.setBackgroundColor(0x00000000); // Transparent
+            // Apply favorite highlight or default transparent background
+            if (player.isFavorite()) {
+                rootView.setBackgroundColor(ContextCompat.getColor(itemView.getContext(), R.color.favorite_highlight));
+            } else {
+                rootView.setBackgroundColor(0x00000000); // Transparent
+            }
             
             // Set position badge with color
             positionBadgeText.setText(player.getPosition());
@@ -165,12 +172,22 @@ public class PlayerSelectionAdapter extends RecyclerView.Adapter<PlayerSelection
             
             nameText.setText(player.getName());
             
-            // ESPN links disabled - display name as plain text
-            nameText.setTextColor(itemView.getContext().getResources().getColor(R.color.text_primary, null));
-            nameText.setPaintFlags(nameText.getPaintFlags() & ~android.graphics.Paint.UNDERLINE_TEXT_FLAG);
-            nameText.setOnClickListener(null);
+            // Enable ESPN links if player has ESPN ID
+            String espnUrl = player.getEspnUrl();
+            if (espnUrl != null && !espnUrl.isEmpty()) {
+                nameText.setTextColor(0xFF1976D2); // Blue color for links
+                nameText.setPaintFlags(nameText.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
+                nameText.setOnClickListener(v -> {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(espnUrl));
+                    itemView.getContext().startActivity(browserIntent);
+                });
+            } else {
+                nameText.setTextColor(itemView.getContext().getResources().getColor(R.color.text_primary, null));
+                nameText.setPaintFlags(nameText.getPaintFlags() & ~android.graphics.Paint.UNDERLINE_TEXT_FLAG);
+                nameText.setOnClickListener(null);
+            }
             
-            // Display just the NFL team (no position code)
+            // Display just the NFL team (no position code) with clickable link to depth chart
             if (player.getNflTeam() != null && !player.getNflTeam().isEmpty()) {
                 String teamInfo = player.getNflTeam();
                 if (player.getByeWeek() > 0) {
@@ -178,9 +195,27 @@ public class PlayerSelectionAdapter extends RecyclerView.Adapter<PlayerSelection
                 }
                 positionText.setText(teamInfo);
                 positionText.setVisibility(View.VISIBLE);
+                
+                // Make team abbreviation clickable to open ESPN depth chart
+                String depthChartUrl = player.getEspnDepthChartUrl();
+                if (depthChartUrl != null) {
+                    positionText.setTextColor(0xFF1976D2); // Blue color for links
+                    positionText.setPaintFlags(positionText.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
+                    positionText.setOnClickListener(v -> {
+                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(depthChartUrl));
+                        itemView.getContext().startActivity(browserIntent);
+                    });
+                } else {
+                    positionText.setTextColor(itemView.getContext().getResources().getColor(R.color.text_secondary, null));
+                    positionText.setPaintFlags(positionText.getPaintFlags() & ~android.graphics.Paint.UNDERLINE_TEXT_FLAG);
+                    positionText.setOnClickListener(null);
+                }
             } else if (player.getByeWeek() > 0) {
                 positionText.setText("(bye-" + player.getByeWeek() + ")");
                 positionText.setVisibility(View.VISIBLE);
+                positionText.setTextColor(itemView.getContext().getResources().getColor(R.color.text_secondary, null));
+                positionText.setPaintFlags(positionText.getPaintFlags() & ~android.graphics.Paint.UNDERLINE_TEXT_FLAG);
+                positionText.setOnClickListener(null);
             } else {
                 positionText.setVisibility(View.GONE);
             }

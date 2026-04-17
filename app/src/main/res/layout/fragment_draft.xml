@@ -17,9 +17,10 @@
 
     <!-- Draft Info Section - Top -->
     <androidx.cardview.widget.CardView
+        android:id="@+id/card_draft_info"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="16dp"
         android:layout_marginBottom="8dp"
         app:cardCornerRadius="4dp"
         app:cardElevation="2dp">
@@ -28,9 +29,69 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="8dp"
-            android:gravity="center">
+            android:padding="8dp">
 
+            <!-- First line: Team, Roster Button, Stopwatch and Collapse Icon -->
+            <LinearLayout
+                android:id="@+id/layout_draft_info_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="6dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
+
+                <TextView
+                    android:id="@+id/text_current_team"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="@string/team_placeholder"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:gravity="start"
+                    android:visibility="gone" />
+
+                <ImageButton
+                    android:id="@+id/button_view_roster"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="6dp"
+                    android:src="@drawable/ic_group_league"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/view_team_roster"
+                    android:scaleType="centerInside"
+                    android:padding="8dp"
+                    android:visibility="gone" />
+
+                <!-- Stopwatch Display -->
+                <TextView
+                    android:id="@+id/text_stopwatch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0:00"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="#FF8C00"
+                    android:gravity="end"
+                    android:layout_marginEnd="8dp"
+                    android:visibility="gone" />
+
+                <!-- Collapse/Expand Icon -->
+                <TextView
+                    android:id="@+id/icon_collapse_expand"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="▼"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary"
+                    android:gravity="center" />
+
+            </LinearLayout>
+
+            <!-- Second line: League Name -->
             <TextView
                 android:id="@+id/text_league_name"
                 android:layout_width="match_parent"
@@ -39,36 +100,37 @@
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
-                android:gravity="center"
+                android:gravity="start"
                 android:layout_marginBottom="6dp" />
 
-            <TextView
-                android:id="@+id/text_overall_pick"
-                android:layout_width="wrap_content"
+            <!-- Collapsible Content -->
+            <LinearLayout
+                android:id="@+id/layout_draft_info_details"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Pick 1 of 150"
-                android:textSize="13sp"
-                android:textStyle="italic"
-                android:gravity="center"
-                android:layout_marginBottom="2dp" />
+                android:orientation="vertical"
+                android:visibility="visible">
 
-            <TextView
-                android:id="@+id/text_round_pick"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/round_pick_placeholder"
-                android:textSize="13sp"
-                android:gravity="center" />
+                <TextView
+                    android:id="@+id/text_overall_pick"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Pick 1 of 150"
+                    android:textSize="13sp"
+                    android:textStyle="italic"
+                    android:gravity="start"
+                    android:layout_marginBottom="2dp" />
 
-            <TextView
-                android:id="@+id/text_current_team"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/team_placeholder"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:layout_marginTop="2dp" />
+                <TextView
+                    android:id="@+id/text_round_pick"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/round_pick_placeholder"
+                    android:textSize="13sp"
+                    android:gravity="start"
+                    android:layout_marginBottom="2dp" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
@@ -76,6 +138,7 @@
 
     <!-- Position Counts Section - Horizontal Above Best Available -->
     <androidx.cardview.widget.CardView
+        android:id="@+id/card_draft_summary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -91,41 +154,58 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="8dp">
+                android:orientation="vertical"
+                android:layout_marginBottom="12dp">
 
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:text="Draft Summary"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:text="Draft Summary"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
 
-                    <ImageButton
-                        android:id="@+id/button_toggle_view"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:src="@drawable/ic_person_team"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:scaleType="fitCenter"
-                        android:contentDescription="Toggle between Current Team and League view"
-                        android:padding="4dp" />
+                <!-- Slider Toggle for Team/League -->
+                <LinearLayout
+                    android:id="@+id/toggle_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:orientation="horizontal"
+                    android:background="@drawable/toggle_slider_background"
+                    android:padding="2dp"
+                    android:gravity="center"
+                    android:layout_marginBottom="8dp">
 
                     <TextView
-                        android:id="@+id/text_view_mode"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:id="@+id/button_team_view"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="match_parent"
                         android:text="Team"
-                        android:textSize="12sp"
-                        android:layout_marginStart="4dp" />
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:gravity="center"
+                        android:background="@drawable/toggle_slider_selected"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:contentDescription="@string/cd_toggle_team_view" />
+
+                    <TextView
+                        android:id="@+id/button_league_view"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="match_parent"
+                        android:text="League"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_secondary"
+                        android:gravity="center"
+                        android:background="@android:color/transparent"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:contentDescription="@string/cd_toggle_league_view" />
 
                 </LinearLayout>
 
@@ -314,6 +394,7 @@
 
     <!-- Best Available Player Section -->
     <androidx.cardview.widget.CardView
+        android:id="@+id/card_best_available"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -326,16 +407,39 @@
             android:orientation="vertical"
             android:padding="12dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/best_available"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:drawableLeft="@drawable/ic_star"
-                android:drawablePadding="8dp"
+                android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/best_available"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:drawableLeft="@drawable/ic_star"
+                    android:drawablePadding="6dp"
+                    android:gravity="center_vertical" />
+
+                <HorizontalScrollView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:scrollbars="none"
+                    android:layout_marginStart="6dp">
+
+                    <LinearLayout
+                        android:id="@+id/layout_best_available_filters"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+
+                </HorizontalScrollView>
+
+            </LinearLayout>
 
             <!-- Player Info Display (non-clickable) -->
             <LinearLayout
@@ -343,7 +447,6 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="12dp"
-                android:background="#F5F5F5"
                 android:gravity="center"
                 android:layout_marginBottom="8dp">
 
@@ -373,7 +476,7 @@
                         android:text="@string/player_name_placeholder"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_on_light_bg"
+                        android:textColor="?android:attr/textColorPrimary"
                         android:maxLines="2"
                         android:ellipsize="end" />
 
@@ -435,6 +538,7 @@
 
     <!-- Action Buttons Row - Make Pick and Reset Draft side by side -->
     <LinearLayout
+        android:id="@+id/layout_action_buttons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -475,6 +579,7 @@
 
     <!-- Draft History Section - Bottom -->
     <androidx.cardview.widget.CardView
+        android:id="@+id/card_recent_picks"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cardCornerRadius="4dp"
@@ -502,6 +607,20 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/button_view_analytics"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Analytics"
+                    android:textSize="14sp"
+                    android:textColor="#2E7D32"
+                    android:textStyle="bold"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="8dp"
+                    android:visibility="gone" />
+
+                <TextView
                     android:id="@+id/button_view_history"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -512,7 +631,23 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:background="?attr/selectableItemBackground"
-                    android:padding="8dp" />
+                    android:padding="8dp"
+                    android:layout_marginStart="4dp" />
+
+                <TextView
+                    android:id="@+id/button_undo_last_pick"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Undo"
+                    android:textSize="14sp"
+                    android:textColor="#FF8C00"
+                    android:textStyle="bold"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="8dp"
+                    android:layout_marginStart="4dp"
+                    android:visibility="gone" />
 
             </LinearLayout>
 
@@ -581,6 +716,34 @@
 
                     </LinearLayout>
 
+                    <!-- Value Indicator -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:layout_marginStart="4dp">
+
+                        <TextView
+                            android:id="@+id/text_pick_1_value_icon"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/text_pick_1_value_score"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textSize="9sp"
+                            android:textStyle="bold"
+                            android:visibility="gone" />
+
+                    </LinearLayout>
+
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -601,7 +764,6 @@
                                 android:layout_weight="1"
                                 android:text="No picks yet"
                                 android:textSize="14sp"
-                                android:textStyle="bold"
                                 android:textColor="@color/text_primary"
                                 android:maxLines="1"
                                 android:ellipsize="end" />
@@ -701,6 +863,34 @@
                             android:text=""
                             android:textSize="9sp"
                             android:textColor="@color/text_secondary"
+                            android:visibility="gone" />
+
+                    </LinearLayout>
+
+                    <!-- Value Indicator -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:layout_marginStart="4dp">
+
+                        <TextView
+                            android:id="@+id/text_pick_2_value_icon"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/text_pick_2_value_score"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textSize="9sp"
+                            android:textStyle="bold"
                             android:visibility="gone" />
 
                     </LinearLayout>
@@ -824,6 +1014,34 @@
                             android:text=""
                             android:textSize="9sp"
                             android:textColor="@color/text_secondary"
+                            android:visibility="gone" />
+
+                    </LinearLayout>
+
+                    <!-- Value Indicator -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:layout_marginStart="4dp">
+
+                        <TextView
+                            android:id="@+id/text_pick_3_value_icon"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/text_pick_3_value_score"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textSize="9sp"
+                            android:textStyle="bold"
                             android:visibility="gone" />
 
                     </LinearLayout>

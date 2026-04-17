@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/navigation_draft"
+            android:title="Draft" />
+        <item
+            android:id="@+id/navigation_favorites"
+            android:title="Favorites" />
+        <item
+            android:id="@+id/navigation_config"
+            android:title="Config" />
+    </group>
+    <group android:id="@+id/group_extras">
+        <item
+            android:id="@+id/navigation_tutorial"
+            android:title="Tutorial" />
+        <item
+            android:id="@+id/navigation_refresh_players"
+            android:title="Refresh Players" />
+    </group>
+</menu>

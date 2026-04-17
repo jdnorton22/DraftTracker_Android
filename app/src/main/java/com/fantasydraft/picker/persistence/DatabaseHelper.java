@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "fantasy_draft.db";
-    private static final int DATABASE_VERSION = 5; // Incremented for byeWeek column
+    private static final int DATABASE_VERSION = 6; // Incremented for stopwatch_enabled column
 
     // Table names
     public static final String TABLE_TEAMS = "teams";
@@ -57,6 +57,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_STATE_NUMBER_OF_ROUNDS = "number_of_rounds";
     public static final String COLUMN_STATE_LEAGUE_NAME = "league_name";
     public static final String COLUMN_STATE_SKIP_FIRST_ROUND = "skip_first_round";
+    public static final String COLUMN_STATE_STOPWATCH_ENABLED = "stopwatch_enabled";
 
     // Create table statements
     private static final String CREATE_TABLE_SAVED_DRAFTS = 
@@ -113,7 +114,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         COLUMN_STATE_FLOW_TYPE + " TEXT NOT NULL, " +
         COLUMN_STATE_NUMBER_OF_ROUNDS + " INTEGER NOT NULL, " +
         COLUMN_STATE_LEAGUE_NAME + " TEXT NOT NULL DEFAULT 'My League', " +
-        COLUMN_STATE_SKIP_FIRST_ROUND + " INTEGER NOT NULL DEFAULT 0" +
+        COLUMN_STATE_SKIP_FIRST_ROUND + " INTEGER NOT NULL DEFAULT 0, " +
+        COLUMN_STATE_STOPWATCH_ENABLED + " INTEGER NOT NULL DEFAULT 0" +
         ");";
 
     // Create index statements for frequently queried columns
@@ -227,6 +229,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 // Add bye_week column to players table
                 db.execSQL("ALTER TABLE " + TABLE_PLAYERS + " ADD COLUMN " + 
                           COLUMN_PLAYER_BYE_WEEK + " INTEGER NOT NULL DEFAULT 0");
+            }
+            
+            if (oldVersion < 6) {
+                // Add stopwatch_enabled column to draft_state table
+                db.execSQL("ALTER TABLE " + TABLE_DRAFT_STATE + " ADD COLUMN " + 
+                          COLUMN_STATE_STOPWATCH_ENABLED + " INTEGER NOT NULL DEFAULT 0");
             }
         } catch (Exception e) {
             // If migration fails, drop all tables and recreate from scratch

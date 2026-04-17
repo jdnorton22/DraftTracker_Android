@@ -191,9 +191,25 @@ public class PlayerDataRefreshManager {
      */
     private void resetDraftState(List<Player> newPlayers) {
         try {
+            // Preserve favorite players before clearing (match by name+position since IDs may change)
+            java.util.Set<String> favoriteKeys = new java.util.HashSet<>();
+            for (Player p : playerManager.getPlayers()) {
+                if (p.isFavorite()) {
+                    favoriteKeys.add(p.getName() + "|" + p.getPosition());
+                }
+            }
+            
+            // Also persist favorites to SharedPreferences as backup
+            android.content.SharedPreferences prefs = context.getSharedPreferences("FantasyDraftPrefs", Context.MODE_PRIVATE);
+            prefs.edit().putStringSet("favorite_players", favoriteKeys).apply();
+            
             // Clear player manager and add new players
             playerManager.clearPlayers();
             for (Player player : newPlayers) {
+                // Restore favorite status
+                if (favoriteKeys.contains(player.getName() + "|" + player.getPosition())) {
+                    player.setFavorite(true);
+                }
                 playerManager.addPlayer(player);
             }
             

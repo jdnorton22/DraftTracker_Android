@@ -5,6 +5,15 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+    <!-- Loading Indicator -->
+    <ProgressBar
+        android:id="@+id/loading_indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        android:contentDescription="@string/cd_loading" />
+
     <TextView
         android:id="@+id/dialog_title"
         android:layout_width="match_parent"
@@ -12,7 +21,8 @@
         android:text="Select Player"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:paddingBottom="8dp" />
+        android:paddingBottom="8dp"
+        android:importantForAccessibility="yes" />
 
     <androidx.appcompat.widget.SearchView
         android:id="@+id/player_search_view"
@@ -26,14 +36,15 @@
     <LinearLayout
         android:id="@+id/filter_header"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/min_touch_target"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="?attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true"
         android:paddingVertical="8dp"
-        android:layout_marginBottom="4dp">
+        android:layout_marginBottom="4dp"
+        android:contentDescription="@string/cd_filter_expand">
 
         <TextView
             android:layout_width="0dp"
@@ -42,7 +53,8 @@
             android:text="Filters"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/text_primary" />
+            android:textColor="@color/text_primary"
+            android:importantForAccessibility="no" />
 
         <TextView
             android:id="@+id/filter_expand_icon"
@@ -50,7 +62,8 @@
             android:layout_height="wrap_content"
             android:text="▼"
             android:textSize="12sp"
-            android:textColor="#000080" />
+            android:textColor="#000080"
+            android:importantForAccessibility="no" />
 
     </LinearLayout>
 
@@ -214,7 +227,8 @@
             android:textAllCaps="false"
             android:textColor="#FFFFFF"
             android:backgroundTint="#2196F3"
-            android:layout_marginEnd="8dp" />
+            android:layout_marginEnd="8dp"
+            android:minHeight="@dimen/min_touch_target" />
 
         <Button
             android:id="@+id/button_draft_custom"
@@ -223,7 +237,8 @@
             android:text="Draft Custom"
             android:textAllCaps="false"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#4CAF50" />
+            android:backgroundTint="#4CAF50"
+            android:minHeight="@dimen/min_touch_target" />
 
     </LinearLayout>
 

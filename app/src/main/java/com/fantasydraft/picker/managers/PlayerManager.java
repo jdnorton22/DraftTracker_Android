@@ -46,6 +46,58 @@ public class PlayerManager {
     }
 
     /**
+     * Get the best available player at a specific position.
+     * Returns the undrafted player with the lowest rank whose position matches.
+     *
+     * @param players  List of players to search
+     * @param position Position code to filter by (e.g. "QB", "RB")
+     * @return The best available player at that position, or null if none available
+     */
+    public Player getBestAvailableByPosition(List<Player> players, String position) {
+        if (players == null || players.isEmpty()) {
+            return null;
+        }
+
+        Player bestAvailable = null;
+        int lowestRank = Integer.MAX_VALUE;
+
+        for (Player player : players) {
+            if (!player.isDrafted() && position.equals(player.getPosition()) && player.getRank() < lowestRank) {
+                lowestRank = player.getRank();
+                bestAvailable = player;
+            }
+        }
+
+        return bestAvailable;
+    }
+
+    /**
+     * Get the best available favorite player (highest-ranked undrafted favorite).
+     *
+     * @param players List of players to search
+     * @return The best available favorite player, or null if none available
+     */
+    public Player getBestAvailableFavorite(List<Player> players) {
+        if (players == null || players.isEmpty()) {
+            return null;
+        }
+
+        Player bestAvailable = null;
+        int lowestRank = Integer.MAX_VALUE;
+
+        for (Player player : players) {
+            if (!player.isDrafted() && player.isFavorite() && player.getRank() < lowestRank) {
+                lowestRank = player.getRank();
+                bestAvailable = player;
+            }
+        }
+
+        return bestAvailable;
+    }
+
+
+
+    /**
      * Mark a player as drafted by a specific team.
      * 
      * @param playerId The ID of the player to draft

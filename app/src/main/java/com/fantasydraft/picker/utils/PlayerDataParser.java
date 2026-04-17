@@ -111,6 +111,9 @@ public class PlayerDataParser {
         player.setDrafted(false);
         player.setDraftedBy(null);
         
+        // Parse favorite status (defaults to false if absent)
+        player.setFavorite(playerJson.optBoolean("favorite", false));
+        
         return player;
     }
     

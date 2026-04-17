@@ -1,17 +1,25 @@
 package com.fantasydraft.picker.ui;
 
+import android.content.Intent;
+import android.net.Uri;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fantasydraft.picker.R;
 import com.fantasydraft.picker.models.Pick;
 import com.fantasydraft.picker.models.Player;
 import com.fantasydraft.picker.models.Team;
+import com.fantasydraft.picker.utils.PickValueCalculator;
 import com.fantasydraft.picker.utils.PositionColors;
 
 import java.util.ArrayList;
@@ -60,6 +68,20 @@ public class DraftHistoryAdapter extends RecyclerView.Adapter<DraftHistoryAdapte
     public void onBindViewHolder(@NonNull PickViewHolder holder, int position) {
         Pick pick = picks.get(position);
         
+        // Show round header badge when round changes from previous item
+        if (position == 0) {
+            holder.roundHeader.setText("Round " + pick.getRound());
+            holder.roundHeader.setVisibility(View.VISIBLE);
+        } else {
+            Pick prevPick = picks.get(position - 1);
+            if (pick.getRound() != prevPick.getRound()) {
+                holder.roundHeader.setText("Round " + pick.getRound());
+                holder.roundHeader.setVisibility(View.VISIBLE);
+            } else {
+                holder.roundHeader.setVisibility(View.GONE);
+            }
+        }
+        
         // Display pick number (without the period)
         holder.pickNumber.setText(String.valueOf(pick.getPickNumber()));
         
@@ -69,30 +91,36 @@ public class DraftHistoryAdapter extends RecyclerView.Adapter<DraftHistoryAdapte
         
         // Get player to access bye week
         Player player = playerMap != null ? playerMap.get(pick.getPlayerId()) : null;
+
+        // Apply favorite highlight or default transparent background
+        boolean isFavorite = player != null && player.isFavorite();
+        if (isFavorite) {
+            holder.rootView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.favorite_highlight));
+            // Use theme-aware text color on favorite highlight (dark in light mode, white in dark mode)
+            int textOnFavorite = ContextCompat.getColor(holder.itemView.getContext(), R.color.text_on_favorite);
+            holder.teamName.setTextColor(textOnFavorite);
+            holder.overallRank.setTextColor(textOnFavorite);
+            holder.pffRank.setTextColor(textOnFavorite);
+            holder.positionRank.setTextColor(textOnFavorite);
+            holder.playerStats.setTextColor(textOnFavorite);
+        } else {
+            holder.rootView.setBackgroundColor(0x00000000); // Transparent
+            // Reset to theme colors
+            holder.teamName.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.text_secondary));
+            holder.overallRank.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.text_primary));
+            holder.pffRank.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.text_secondary));
+            holder.positionRank.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.text_secondary));
+            holder.playerStats.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.text_secondary));
+        }
+
         if (player != null && player.getByeWeek() > 0) {
             teamName += " (bye-" + player.getByeWeek() + ")";
         }
         holder.teamName.setText(teamName);
         
-        // Find the highest pick number (most recent pick) to show undo button
-        int highestPickNumber = 0;
-        for (Pick p : picks) {
-            if (p.getPickNumber() > highestPickNumber) {
-                highestPickNumber = p.getPickNumber();
-            }
-        }
-        
-        // Only show undo button for the most recent pick (highest pick number)
-        if (pick.getPickNumber() == highestPickNumber) {
-            holder.undoButton.setVisibility(View.VISIBLE);
-            holder.undoButton.setOnClickListener(v -> {
-                if (undoListener != null) {
-                    undoListener.onUndoClick(pick, position);
-                }
-            });
-        } else {
-            holder.undoButton.setVisibility(View.GONE);
-        }
+        // Find the highest pick number (most recent pick)
+        // Undo button has been moved to Recent Picks section in DraftFragment
+        holder.undoButton.setVisibility(View.GONE);
         
         // Display player name and position
         if (player != null) {
@@ -110,8 +138,62 @@ public class DraftHistoryAdapter extends RecyclerView.Adapter<DraftHistoryAdapte
             }
             String playerInfo = player.getName() + " (" + positionInfo + ")";
             
-            // ESPN links disabled - display as plain text
-            holder.playerInfo.setText(playerInfo);
+            // Enable ESPN links if player has ESPN ID or team depth chart
+            String espnUrl = player.getEspnUrl();
+            String depthChartUrl = player.getEspnDepthChartUrl();
+            
+            if (espnUrl != null || depthChartUrl != null) {
+                SpannableString spannableString = new SpannableString(playerInfo);
+                
+                // Make player name clickable if ESPN ID exists
+                if (espnUrl != null && !espnUrl.isEmpty()) {
+                    ClickableSpan playerClickableSpan = new ClickableSpan() {
+                        @Override
+                        public void onClick(@NonNull View widget) {
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(espnUrl));
+                            holder.itemView.getContext().startActivity(browserIntent);
+                        }
+                        
+                        @Override
+                        public void updateDrawState(@NonNull android.text.TextPaint ds) {
+                            super.updateDrawState(ds);
+                            ds.setColor(0xFF1976D2); // Blue color
+                            ds.setUnderlineText(true);
+                        }
+                    };
+                    
+                    int nameLength = player.getName().length();
+                    spannableString.setSpan(playerClickableSpan, 0, nameLength, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+                
+                // Make team abbreviation clickable if depth chart URL exists
+                if (depthChartUrl != null && player.getNflTeam() != null && !player.getNflTeam().isEmpty()) {
+                    int teamStart = playerInfo.indexOf(player.getNflTeam());
+                    if (teamStart != -1) {
+                        int teamEnd = teamStart + player.getNflTeam().length();
+                        ClickableSpan teamClickableSpan = new ClickableSpan() {
+                            @Override
+                            public void onClick(@NonNull View widget) {
+                                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(depthChartUrl));
+                                holder.itemView.getContext().startActivity(browserIntent);
+                            }
+                            
+                            @Override
+                            public void updateDrawState(@NonNull android.text.TextPaint ds) {
+                                super.updateDrawState(ds);
+                                ds.setColor(0xFF1976D2); // Blue color
+                                ds.setUnderlineText(true);
+                            }
+                        };
+                        spannableString.setSpan(teamClickableSpan, teamStart, teamEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                }
+                
+                holder.playerInfo.setText(spannableString);
+                holder.playerInfo.setMovementMethod(LinkMovementMethod.getInstance());
+            } else {
+                holder.playerInfo.setText(playerInfo);
+            }
             
             // Display rankings
             holder.overallRank.setText(String.valueOf(player.getRank()));
@@ -158,12 +240,39 @@ public class DraftHistoryAdapter extends RecyclerView.Adapter<DraftHistoryAdapte
             } else {
                 holder.injuryStatus.setVisibility(View.GONE);
             }
+            
+            // Calculate and display value score
+            int valueScore = PickValueCalculator.calculateValueScore(pick, player);
+            android.util.Log.d("DraftHistory", "Pick " + pick.getPickNumber() + " - Player: " + player.getName() + 
+                ", ADP: " + player.getPffRank() + ", ValueScore: " + valueScore);
+            if (player.getPffRank() > 0) {
+                PickValueCalculator.ValueTier tier = PickValueCalculator.getValueTier(valueScore);
+                String icon = PickValueCalculator.getValueIcon(tier);
+                int color = PickValueCalculator.getValueColor(tier);
+                String scoreText = PickValueCalculator.getValueString(valueScore);
+                
+                android.util.Log.d("DraftHistory", "Showing value indicator: " + icon + " " + scoreText);
+                
+                holder.valueIcon.setText(icon);
+                holder.valueIcon.setTextColor(color);
+                holder.valueIcon.setVisibility(View.VISIBLE);
+                
+                holder.valueScore.setText(scoreText);
+                holder.valueScore.setTextColor(color);
+                holder.valueScore.setVisibility(View.VISIBLE);
+            } else {
+                android.util.Log.d("DraftHistory", "Hiding value indicator - pffRank: " + player.getPffRank());
+                holder.valueIcon.setVisibility(View.GONE);
+                holder.valueScore.setVisibility(View.GONE);
+            }
         } else {
             holder.playerInfo.setText("Unknown Player");
             holder.overallRank.setText("-");
             holder.pffRank.setVisibility(View.GONE);
             holder.positionRank.setVisibility(View.GONE);
             holder.playerStats.setVisibility(View.GONE);
+            holder.valueIcon.setVisibility(View.GONE);
+            holder.valueScore.setVisibility(View.GONE);
             
             // Reset to default gray circle
             android.graphics.drawable.GradientDrawable circle = new android.graphics.drawable.GradientDrawable();
@@ -188,7 +297,10 @@ public class DraftHistoryAdapter extends RecyclerView.Adapter<DraftHistoryAdapte
         TextView playerInfo;
         TextView playerStats;
         TextView injuryStatus;
+        TextView valueIcon;
+        TextView valueScore;
         android.widget.ImageButton undoButton;
+        TextView roundHeader;
 
         PickViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -201,7 +313,10 @@ public class DraftHistoryAdapter extends RecyclerView.Adapter<DraftHistoryAdapte
             playerInfo = itemView.findViewById(R.id.text_player_info);
             playerStats = itemView.findViewById(R.id.text_player_stats);
             injuryStatus = itemView.findViewById(R.id.text_injury_status);
+            valueIcon = itemView.findViewById(R.id.text_value_icon);
+            valueScore = itemView.findViewById(R.id.text_value_score);
             undoButton = itemView.findViewById(R.id.button_undo_pick);
+            roundHeader = itemView.findViewById(R.id.text_round_header);
         }
     }
 }

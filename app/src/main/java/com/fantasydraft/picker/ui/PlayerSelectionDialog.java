@@ -44,6 +44,7 @@ public class PlayerSelectionDialog extends Dialog {
     private android.widget.LinearLayout filterHeader;
     private android.widget.LinearLayout filterContent;
     private android.widget.TextView filterExpandIcon;
+    private android.widget.ProgressBar loadingIndicator;
     
     private boolean hideDrafted = true; // Default to hiding drafted players
     private String selectedPosition = "ALL"; // Default to all positions
@@ -66,6 +67,15 @@ public class PlayerSelectionDialog extends Dialog {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.dialog_player_selection);
+
+        // Set dialog width to 95% of screen width for better visibility
+        Window window = getWindow();
+        if (window != null) {
+            android.view.WindowManager.LayoutParams params = window.getAttributes();
+            android.util.DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+            params.width = (int) (displayMetrics.widthPixels * 0.95);
+            window.setAttributes(params);
+        }
 
         initializeViews();
         setupRecyclerView();
@@ -91,6 +101,7 @@ public class PlayerSelectionDialog extends Dialog {
         filterHeader = findViewById(R.id.filter_header);
         filterContent = findViewById(R.id.filter_content);
         filterExpandIcon = findViewById(R.id.filter_expand_icon);
+        loadingIndicator = findViewById(R.id.loading_indicator);
     }
 
     private void setupRecyclerView() {
@@ -276,6 +287,42 @@ public class PlayerSelectionDialog extends Dialog {
         if (adapter != null) {
             adapter.updatePlayers(newPlayers);
             updatePlayerCount();
+        }
+    }
+    
+    /**
+     * Show loading indicator and hide content
+     */
+    public void showLoading() {
+        if (loadingIndicator != null) {
+            loadingIndicator.setVisibility(android.view.View.VISIBLE);
+        }
+        if (recyclerView != null) {
+            recyclerView.setVisibility(android.view.View.GONE);
+        }
+        if (cancelButton != null) {
+            cancelButton.setEnabled(false);
+        }
+        if (buttonDraftCustom != null) {
+            buttonDraftCustom.setEnabled(false);
+        }
+    }
+    
+    /**
+     * Hide loading indicator and show content
+     */
+    public void hideLoading() {
+        if (loadingIndicator != null) {
+            loadingIndicator.setVisibility(android.view.View.GONE);
+        }
+        if (recyclerView != null) {
+            recyclerView.setVisibility(android.view.View.VISIBLE);
+        }
+        if (cancelButton != null) {
+            cancelButton.setEnabled(true);
+        }
+        if (buttonDraftCustom != null) {
+            buttonDraftCustom.setEnabled(true);
         }
     }
 }

@@ -18,6 +18,8 @@
         <!-- Prevent ActionBar overlay -->
         <item name="windowActionBarOverlay">false</item>
         <item name="android:windowActionBarOverlay">false</item>
+        <!-- Light status bar: dark icons/text for visibility in light mode -->
+        <item name="android:windowLightStatusBar">true</item>
         <!-- Custom ActionBar style -->
         <item name="actionBarStyle">@style/CustomActionBar</item>
     </style>

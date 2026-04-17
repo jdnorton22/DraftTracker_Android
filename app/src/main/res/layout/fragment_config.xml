@@ -24,6 +24,21 @@
             android:textStyle="bold"
             android:layout_marginBottom="32dp" />
 
+        <!-- Draft In Progress Banner -->
+        <TextView
+            android:id="@+id/text_draft_in_progress_banner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Draft in Progress - Configurations are locked down"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="#FF8C00"
+            android:padding="10dp"
+            android:gravity="center"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone" />
+
         <!-- League Name Section -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
@@ -42,6 +57,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="League Name"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />
@@ -49,12 +65,15 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Enter league name">
+                    android:hint="Enter league name"
+                    android:textColorHint="#666666">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/input_league_name"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="#666666"
                         android:inputType="text"
                         android:maxLines="1" />
 
@@ -161,6 +180,39 @@
 
         </androidx.cardview.widget.CardView>
 
+        <!-- Stopwatch Setting -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Draft Clock"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <CheckBox
+                    android:id="@+id/checkbox_stopwatch_enabled"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Enable Stopwatch (shows pick timer on draft screen)"
+                    android:minHeight="48dp" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
         <!-- Number of Rounds Section -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
@@ -227,6 +279,133 @@
 
         </androidx.cardview.widget.CardView>
 
+        <!-- SMS Draft Updates Section -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SMS Draft Updates"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Add phone numbers to receive draft pick updates via SMS."
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="8dp" />
+
+                <CheckBox
+                    android:id="@+id/checkbox_sms_enabled"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Enable SMS updates after each pick"
+                    android:minHeight="48dp" />
+
+                <!-- Add number row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="4dp">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="Phone number">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/input_sms_new_number"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/text_primary"
+                            android:inputType="phone"
+                            android:maxLines="1" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <Button
+                        android:id="@+id/button_add_sms_number"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Add"
+                        android:textSize="13sp"
+                        android:textAllCaps="false"
+                        android:layout_marginStart="8dp"
+                        android:minWidth="64dp" />
+
+                </LinearLayout>
+
+                <!-- List of added numbers -->
+                <LinearLayout
+                    android:id="@+id/layout_sms_numbers_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="8dp" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Position Requirements Section -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Position Roster Requirements"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Set minimum and maximum players per position"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="12dp" />
+
+                <!-- Position Requirements List -->
+                <LinearLayout
+                    android:id="@+id/layout_position_requirements"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
         <!-- Save Button -->
         <Button
             android:id="@+id/button_save_config"
@@ -274,6 +453,15 @@
                     android:textSize="14sp"
                     style="?attr/materialButtonOutlinedStyle" />
 
+                <TextView
+                    android:id="@+id/text_player_data_age"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center" />
+
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
@@ -297,6 +485,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Import Custom Player Data"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />
@@ -305,6 +494,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Upload a custom players.json file to use your own player rankings and data."
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp"
                     android:layout_marginBottom="12dp" />
 
@@ -312,6 +502,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="File Format Requirements:"
+                    android:textColor="@color/text_primary"
                     android:textSize="13sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="4dp" />
@@ -320,6 +511,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="• JSON array format\n• Minimum 10 players\n• Required fields: id, name, position, rank\n• Optional: pffRank, positionRank, nflTeam, lastYearStats, injuryStatus, espnId, byeWeek"
+                    android:textColor="@color/text_secondary"
                     android:textSize="12sp"
                     android:lineSpacingExtra="2dp"
                     android:layout_marginBottom="12dp" />
@@ -328,9 +520,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Example:\n[{\n  &quot;id&quot;: 10000,\n  &quot;name&quot;: &quot;Christian McCaffrey&quot;,\n  &quot;position&quot;: &quot;RB&quot;,\n  &quot;nflTeam&quot;: &quot;SF&quot;,\n  &quot;rank&quot;: 1,\n  &quot;pffRank&quot;: 1,\n  &quot;positionRank&quot;: 1,\n  &quot;lastYearStats&quot;: &quot;202 rush yds, 0 rush TDs, 15 rec, 146 rec yds&quot;,\n  &quot;injuryStatus&quot;: &quot;QUESTIONABLE&quot;,\n  &quot;espnId&quot;: &quot;3117251&quot;,\n  &quot;byeWeek&quot;: 7\n}]"
+                    android:textColor="@color/text_secondary"
                     android:textSize="11sp"
                     android:fontFamily="monospace"
-                    android:background="#F5F5F5"
+                    android:background="@color/code_block_background"
                     android:padding="8dp"
                     android:layout_marginBottom="12dp" />
 

@@ -17,6 +17,9 @@
     <string name="make_pick">Make Pick</string>
     <string name="reset_draft">Reset Draft Board</string>
     
+    <!-- Team Roster -->
+    <string name="view_team_roster">View team roster</string>
+    
     <!-- Draft History -->
     <string name="draft_history">Draft History</string>
     
@@ -71,5 +74,38 @@
     <string name="refresh_error_invalid_data">Invalid data format. Please try again later.</string>
     <string name="refresh_error_save_failed">Unable to save player data. Please check storage space.</string>
     <string name="refresh_error_generic">Refresh failed: %s</string>
+    
+    <!-- Navigation Drawer -->
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    
+    <!-- Accessibility Content Descriptions -->
+    <string name="cd_position_badge">Position badge</string>
+    <string name="cd_quarterback_count">Quarterbacks drafted</string>
+    <string name="cd_running_back_count">Running backs drafted</string>
+    <string name="cd_wide_receiver_count">Wide receivers drafted</string>
+    <string name="cd_tight_end_count">Tight ends drafted</string>
+    <string name="cd_kicker_count">Kickers drafted</string>
+    <string name="cd_defense_count">Defenses drafted</string>
+    <string name="cd_toggle_team_view">Switch to team view</string>
+    <string name="cd_toggle_league_view">Switch to league view</string>
+    <string name="cd_filter_expand">Expand filters</string>
+    <string name="cd_filter_collapse">Collapse filters</string>
+    <string name="cd_loading">Loading</string>
+    
+    <!-- Loading States -->
+    <string name="loading_players">Loading players…</string>
+    <string name="loading_draft_data">Loading draft data…</string>
+    <string name="processing_pick">Processing pick…</string>
+    <string name="saving_draft">Saving draft…</string>
+    
+    <!-- Draft Board -->
+    <string name="draft_board">Draft Board</string>
+    <string name="view_full_board">View Full</string>
+    <string name="upcoming_picks">Your Upcoming Picks</string>
+    <string name="position_needs">Position Needs</string>
+    <string name="draft_grade">Draft Grade</string>
+    <string name="share_results">Share Results</string>
+    <string name="view_full_draft">View Draft</string>
 </resources>
 

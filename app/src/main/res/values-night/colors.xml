@@ -7,4 +7,16 @@
     
     <!-- Text color for light backgrounds (stays dark in both modes) -->
     <color name="text_on_light_bg">#333333</color>
+    
+    <!-- Code block background for dark mode -->
+    <color name="code_block_background">#2B2B2B</color>
+    
+    <!-- Toggle slider background for dark mode -->
+    <color name="toggle_background">#424242</color>
+    
+    <!-- Favorite player highlight for dark mode - lighter gold/amber for better contrast -->
+    <color name="favorite_highlight">#665500</color>
+    
+    <!-- Text color on favorite highlight (white for dark mode) -->
+    <color name="text_on_favorite">#FFFFFF</color>
 </resources>

@@ -10,8 +10,8 @@ android {
         applicationId "com.fantasydraft.picker"
         minSdk 24
         targetSdk 35
-        versionCode 11
-        versionName "2.0"
+        versionCode 30
+        versionName "3.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -37,6 +37,10 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -52,6 +56,9 @@ dependencies {
 
     // Unit Testing
     testImplementation 'junit:junit:4.13.2'
+    
+    // Real org.json implementation for unit tests (Android stubs don't work in local JVM tests)
+    testImplementation 'org.json:json:20231013'
     
     // Property-Based Testing with junit-quickcheck
     testImplementation 'com.pholser:junit-quickcheck-core:1.0'

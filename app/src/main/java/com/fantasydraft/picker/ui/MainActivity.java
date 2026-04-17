@@ -1,11 +1,15 @@
 package com.fantasydraft.picker.ui;
 
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.fantasydraft.picker.R;
@@ -23,16 +27,16 @@ import com.fantasydraft.picker.models.Team;
 import com.fantasydraft.picker.persistence.PersistenceException;
 import com.fantasydraft.picker.persistence.PersistenceManager;
 import com.fantasydraft.picker.utils.PlayerDataLoader;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Main activity hosting fragments with bottom navigation.
+ * Main activity hosting fragments with drawer navigation.
  * Requirements: 4.1, 4.2, 4.5, 5.1, 5.2, 5.5, 5.6, 8.2, 10.1, 10.2, 10.3
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     
     public static final int REQUEST_CODE_HISTORY = 1002;
     
@@ -44,7 +48,8 @@ public class MainActivity extends AppCompatActivity {
     private PersistenceManager persistenceManager;
     
     // UI Components
-    private BottomNavigationView bottomNavigation;
+    private DrawerLayout drawerLayout;
+    private NavigationView navigationView;
     private androidx.fragment.app.FragmentContainerView fragmentContainer;
     
     // State
@@ -111,19 +116,21 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         
         // Initialize UI components
-        bottomNavigation = findViewById(R.id.bottom_navigation);
+        drawerLayout = findViewById(R.id.drawer_layout);
+        navigationView = findViewById(R.id.navigation_view);
         fragmentContainer = findViewById(R.id.fragment_container);
+        
+        // Set up navigation drawer
+        setupNavigationDrawer();
         
         // Initialize managers and load draft state
         initializeManagers();
         loadDraftState();
         
-        // Set up bottom navigation
-        setupBottomNavigation();
-        
         // Display default fragment (DraftFragment) if no saved state
         if (savedInstanceState == null) {
             showFragment(new DraftFragment());
+            navigationView.setCheckedItem(R.id.navigation_draft);
         }
     }
     
@@ -163,6 +170,17 @@ public class MainActivity extends AppCompatActivity {
             List<Player> players = PlayerDataLoader.loadPlayers(this);
             for (Player player : players) {
                 playerManager.addPlayer(player);
+            }
+            
+            // Restore favorites from SharedPreferences (survives player refresh)
+            java.util.Set<String> favoriteKeys = getSharedPreferences("FantasyDraftPrefs", MODE_PRIVATE)
+                    .getStringSet("favorite_players", null);
+            if (favoriteKeys != null) {
+                for (Player player : playerManager.getPlayers()) {
+                    if (favoriteKeys.contains(player.getName() + "|" + player.getPosition())) {
+                        player.setFavorite(true);
+                    }
+                }
             }
         } catch (Exception e) {
             Toast.makeText(this, "Error loading player data: " + e.getMessage(), 
@@ -212,6 +230,9 @@ public class MainActivity extends AppCompatActivity {
                         draftManager.addPickToHistory(pick);
                     }
                 }
+                
+                // Update coordinator with rebuilt draft manager
+                draftCoordinator = new DraftCoordinator(draftManager, playerManager, teamManager);
             } else {
                 // Create default state
                 createDefaultState();
@@ -251,28 +272,66 @@ public class MainActivity extends AppCompatActivity {
     }
     
     /**
-     * Set up bottom navigation tab selection listener.
+     * Set up navigation drawer with hamburger menu.
      * Requirements: 4.1, 4.2, 4.5
      */
-    private void setupBottomNavigation() {
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            
-            if (itemId == R.id.navigation_draft) {
-                showFragment(new DraftFragment());
-                return true;
-            } else if (itemId == R.id.navigation_config) {
-                showFragment(new ConfigFragment());
-                return true;
-            }
-            
-            return false;
-        });
+    private void setupNavigationDrawer() {
+        navigationView.setNavigationItemSelectedListener(this);
         
-        // Set Draft tab as default selected
-        bottomNavigation.setSelectedItemId(R.id.navigation_draft);
+        // Force green background with white text/icons for nav drawer
+        navigationView.setBackgroundColor(android.graphics.Color.parseColor("#2E7D32"));
+        navigationView.setItemTextColor(android.content.res.ColorStateList.valueOf(android.graphics.Color.WHITE));
+        navigationView.setItemIconTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.WHITE));
+        
+        // Set up hamburger icon
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawerLayout, 
+                R.string.navigation_drawer_open, 
+                R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+        
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+        }
     }
     
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        int itemId = item.getItemId();
+        
+        if (itemId == R.id.navigation_draft) {
+            showFragment(new DraftFragment());
+        } else if (itemId == R.id.navigation_favorites) {
+            showFragment(new FavoritesFragment());
+        } else if (itemId == R.id.navigation_config) {
+            showFragment(new ConfigFragment());
+        } else if (itemId == R.id.navigation_tutorial) {
+            DraftWalkthrough.reset(this);
+            showFragment(new DraftFragment());
+            navigationView.setCheckedItem(R.id.navigation_draft);
+        } else if (itemId == R.id.navigation_refresh_players) {
+            showRefreshPlayersConfirmation();
+        }
+        
+        drawerLayout.closeDrawer(GravityCompat.START);
+        return true;
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                drawerLayout.closeDrawer(GravityCompat.START);
+            } else {
+                drawerLayout.openDrawer(GravityCompat.START);
+            }
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     /**
      * Show a fragment in the fragment container.
      * Requirements: 4.1, 4.2
@@ -304,6 +363,16 @@ public class MainActivity extends AppCompatActivity {
             snapshot.setTimestamp(System.currentTimeMillis());
             
             persistenceManager.saveDraft(snapshot);
+            
+            // Also persist favorites to SharedPreferences (survives player refresh)
+            java.util.Set<String> favoriteKeys = new java.util.HashSet<>();
+            for (Player p : playerManager.getPlayers()) {
+                if (p.isFavorite()) {
+                    favoriteKeys.add(p.getName() + "|" + p.getPosition());
+                }
+            }
+            getSharedPreferences("FantasyDraftPrefs", MODE_PRIVATE).edit()
+                    .putStringSet("favorite_players", favoriteKeys).apply();
         } catch (PersistenceException e) {
             handlePersistenceError(e, false);
         } catch (Exception e) {
@@ -356,6 +425,61 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
     
+    /**
+     * Show confirmation dialog before refreshing player data from the nav menu.
+     */
+    private void showRefreshPlayersConfirmation() {
+        new AlertDialog.Builder(this)
+            .setTitle("Refresh Player Data?")
+            .setMessage("This will download the latest player data and reset your current draft. All picks will be cleared and cannot be recovered. Continue?")
+            .setPositiveButton("Refresh", (dialog, which) -> refreshPlayerDataFromMenu())
+            .setNegativeButton("Cancel", null)
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .show();
+    }
+    
+    /**
+     * Refresh player data (same logic as ConfigFragment).
+     */
+    private void refreshPlayerDataFromMenu() {
+        android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(this);
+        progressDialog.setTitle("Refreshing Player Data");
+        progressDialog.setMessage("Downloading latest data...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+        
+        com.fantasydraft.picker.managers.PlayerDataRefreshManager refreshManager = 
+            new com.fantasydraft.picker.managers.PlayerDataRefreshManager(
+                this, playerManager, draftCoordinator, persistenceManager, teams, pickHistory);
+        
+        refreshManager.refreshPlayerData(new com.fantasydraft.picker.managers.PlayerDataRefreshManager.RefreshCallback() {
+            @Override
+            public void onRefreshStart() {}
+            
+            @Override
+            public void onRefreshSuccess(int playerCount) {
+                progressDialog.dismiss();
+                new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Refresh Complete")
+                    .setMessage("Successfully refreshed " + playerCount + " players. Draft has been reset.")
+                    .setPositiveButton("OK", (d, w) -> recreate())
+                    .setCancelable(false)
+                    .show();
+            }
+            
+            @Override
+            public void onRefreshError(String errorMessage) {
+                progressDialog.dismiss();
+                new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Refresh Failed")
+                    .setMessage(errorMessage)
+                    .setPositiveButton("OK", null)
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+            }
+        });
+    }
+    
     @Override
     protected void onPause() {
         super.onPause();
@@ -376,7 +500,7 @@ public class MainActivity extends AppCompatActivity {
             int position = data.getIntExtra(DraftHistoryActivity.RESULT_UNDO_POSITION, -1);
             
             if (pickToUndo != null && position >= 0) {
-                undoPick(pickToUndo, position);
+                undoPick(pickToUndo);
                 
                 // Force UI refresh after undo completes
                 Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
@@ -392,8 +516,9 @@ public class MainActivity extends AppCompatActivity {
     
     /**
      * Undo a specific pick from the draft history.
+     * Made public so DraftFragment can call it directly for the undo button.
      */
-    private void undoPick(Pick pickToUndo, int position) {
+    public void undoPick(Pick pickToUndo) {
         try {
             // Find the actual position of the pick in the pick history
             // (position parameter may be incorrect if history was filtered/sorted)
@@ -460,6 +585,9 @@ public class MainActivity extends AppCompatActivity {
                 draftManager.addPickToHistory(pick);
             }
             
+            // Update coordinator with new draft manager
+            draftCoordinator = new DraftCoordinator(draftManager, playerManager, teamManager);
+            
             // Save state
             saveDraftState();
             
@@ -485,9 +613,13 @@ public class MainActivity extends AppCompatActivity {
     
     @Override
     public void onBackPressed() {
-        // Exit app instead of navigating between tabs
-        // Requirements: 10.1, 10.2, 10.3
-        saveDraftState();
-        super.onBackPressed();
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            // Exit app and save draft state
+            // Requirements: 10.1, 10.2, 10.3
+            saveDraftState();
+            super.onBackPressed();
+        }
     }
 }

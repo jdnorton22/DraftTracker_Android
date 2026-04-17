@@ -3,13 +3,16 @@ package com.fantasydraft.picker.ui;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -18,6 +21,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.fantasydraft.picker.R;
@@ -25,6 +29,7 @@ import com.fantasydraft.picker.managers.DraftCoordinator;
 import com.fantasydraft.picker.managers.DraftManager;
 import com.fantasydraft.picker.managers.PlayerManager;
 import com.fantasydraft.picker.managers.TeamManager;
+import com.fantasydraft.picker.models.DraftAnalytics;
 import com.fantasydraft.picker.models.DraftConfig;
 import com.fantasydraft.picker.models.DraftState;
 import com.fantasydraft.picker.models.FlowType;
@@ -32,6 +37,7 @@ import com.fantasydraft.picker.models.Pick;
 import com.fantasydraft.picker.models.Player;
 import com.fantasydraft.picker.models.Team;
 import com.fantasydraft.picker.utils.DraftCsvExporter;
+import com.fantasydraft.picker.utils.PickValueCalculator;
 import com.fantasydraft.picker.utils.PositionColors;
 
 import java.io.File;
@@ -52,17 +58,27 @@ public class DraftFragment extends Fragment {
     private TextView textCurrentTeam;
     private Button buttonMakePick;
     
+    // UI Components - Draft Info Collapse/Expand
+    private LinearLayout layoutDraftInfoHeader;
+    private LinearLayout layoutDraftInfoDetails;
+    private TextView iconCollapseExpand;
+    private boolean isDraftInfoExpanded = true;
+    
     // UI Components - Best Available Player Section
+    private androidx.cardview.widget.CardView cardBestAvailable;
     private Button buttonDraftBestPlayer;
     private TextView textBestPlayerName;
     private TextView textBestPlayerPositionBadge;
     private TextView textBestPlayerPosition;
     private TextView textBestPlayerInjuryStatus;
     private TextView textBestPlayerStats;
+    private LinearLayout layoutBestAvailableFilters;
+    private String selectedPositionFilter = "Overall";
+    private static final String[] POSITION_FILTER_OPTIONS = {"Overall", "Fav", "QB", "RB", "WR", "TE", "K", "DST"};
     
     // UI Components - Position Counts
-    private ImageButton buttonToggleView;
-    private TextView textViewMode;
+    private TextView buttonTeamView;
+    private TextView buttonLeagueView;
     private TextView textPositionWR;
     private TextView textPositionRB;
     private TextView textPositionQB;
@@ -91,6 +107,8 @@ public class DraftFragment extends Fragment {
     private TextView textPick1Adp;
     private TextView textPick1PositionRank;
     private TextView textPick1Stats;
+    private TextView textPick1ValueIcon;
+    private TextView textPick1ValueScore;
     private TextView textPick2Number;
     private TextView textPick2Player;
     private TextView textPick2InjuryStatus;
@@ -99,6 +117,8 @@ public class DraftFragment extends Fragment {
     private TextView textPick2Adp;
     private TextView textPick2PositionRank;
     private TextView textPick2Stats;
+    private TextView textPick2ValueIcon;
+    private TextView textPick2ValueScore;
     private TextView textPick3Number;
     private TextView textPick3Player;
     private TextView textPick3InjuryStatus;
@@ -107,12 +127,30 @@ public class DraftFragment extends Fragment {
     private TextView textPick3Adp;
     private TextView textPick3PositionRank;
     private TextView textPick3Stats;
+    private TextView textPick3ValueIcon;
+    private TextView textPick3ValueScore;
     
     // UI Components - Action Buttons
     private TextView buttonViewHistory;
+    private TextView buttonViewAnalytics;
+    private TextView buttonUndoLastPick;
     private Button buttonResetDraft;
     
-;
+    // UI Components - Team Roster Button (Req 1.1, 1.2)
+    private ImageButton buttonViewRoster;
+    
+    // UI Components - Stopwatch
+    private TextView textStopwatch;
+    private android.os.Handler stopwatchHandler;
+    private long stopwatchStartTime;
+    private boolean stopwatchRunning;
+    private static final String PREF_STOPWATCH_START = "stopwatch_start_time";
+    
+    // Track last pick count for animation
+    private int lastPickCount = -1;
+    
+    // Track last best available player for animation
+    private String lastBestPlayerId = null;
     
     @Nullable
     @Override
@@ -134,7 +172,10 @@ public class DraftFragment extends Fragment {
         // Requirements: 11.2
         // Add a small delay to ensure MainActivity's data is fully updated after undo
         if (getView() != null) {
-            getView().postDelayed(this::updateUI, 100);
+            getView().postDelayed(() -> {
+                updateUI();
+                showWalkthroughIfNeeded();
+            }, 100);
         } else {
             updateUI();
         }
@@ -143,6 +184,9 @@ public class DraftFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
+        // Stop local UI updates but keep the notification service running
+        stopwatchRunning = false;
+        stopwatchHandler.removeCallbacks(stopwatchRunnable);
         // Notify MainActivity to save state when fragment is paused
         // Requirements: 11.2
         MainActivity mainActivity = getMainActivity();
@@ -165,6 +209,7 @@ public class DraftFragment extends Fragment {
         buttonMakePick.setTextColor(0xFFFFFFFF); // Force white text color
         
         // Best Available Player Section
+        cardBestAvailable = view.findViewById(R.id.card_best_available);
         buttonDraftBestPlayer = view.findViewById(R.id.button_draft_best_player);
         buttonDraftBestPlayer.setTextColor(0xFFFFFFFF); // Force white text color
         textBestPlayerName = view.findViewById(R.id.text_best_player_name);
@@ -173,9 +218,13 @@ public class DraftFragment extends Fragment {
         textBestPlayerInjuryStatus = view.findViewById(R.id.text_best_player_injury_status);
         textBestPlayerStats = view.findViewById(R.id.text_best_player_stats);
         
+        // Position Filter Buttons
+        layoutBestAvailableFilters = view.findViewById(R.id.layout_best_available_filters);
+        setupPositionFilterButtons();
+        
         // Position Counts
-        buttonToggleView = view.findViewById(R.id.button_toggle_view);
-        textViewMode = view.findViewById(R.id.text_view_mode);
+        buttonTeamView = view.findViewById(R.id.button_team_view);
+        buttonLeagueView = view.findViewById(R.id.button_league_view);
         textPositionWR = view.findViewById(R.id.text_position_wr);
         textPositionRB = view.findViewById(R.id.text_position_rb);
         textPositionQB = view.findViewById(R.id.text_position_qb);
@@ -220,17 +269,21 @@ public class DraftFragment extends Fragment {
         kCircle.setColor(PositionColors.getColorForPosition("K"));
         textPositionK.setBackground(kCircle);
         
-        // Set up toggle button click listener
-        buttonToggleView.setOnClickListener(v -> {
-            showLeagueCounts = !showLeagueCounts;
+        // Set up toggle button click listeners
+        buttonTeamView.setOnClickListener(v -> {
             if (showLeagueCounts) {
-                buttonToggleView.setImageResource(R.drawable.ic_group_league);
-                textViewMode.setText("League");
-            } else {
-                buttonToggleView.setImageResource(R.drawable.ic_person_team);
-                textViewMode.setText("Team");
+                showLeagueCounts = false;
+                updateToggleAppearance();
+                updatePositionCounts();
             }
-            updatePositionCounts();
+        });
+        
+        buttonLeagueView.setOnClickListener(v -> {
+            if (!showLeagueCounts) {
+                showLeagueCounts = true;
+                updateToggleAppearance();
+                updatePositionCounts();
+            }
         });
         
         // Recent Picks Section
@@ -245,6 +298,8 @@ public class DraftFragment extends Fragment {
         textPick1Adp = view.findViewById(R.id.text_pick_1_adp);
         textPick1PositionRank = view.findViewById(R.id.text_pick_1_position_rank);
         textPick1Stats = view.findViewById(R.id.text_pick_1_stats);
+        textPick1ValueIcon = view.findViewById(R.id.text_pick_1_value_icon);
+        textPick1ValueScore = view.findViewById(R.id.text_pick_1_value_score);
         textPick2Number = view.findViewById(R.id.text_pick_2_number);
         textPick2Player = view.findViewById(R.id.text_pick_2_player);
         textPick2InjuryStatus = view.findViewById(R.id.text_pick_2_injury_status);
@@ -253,6 +308,8 @@ public class DraftFragment extends Fragment {
         textPick2Adp = view.findViewById(R.id.text_pick_2_adp);
         textPick2PositionRank = view.findViewById(R.id.text_pick_2_position_rank);
         textPick2Stats = view.findViewById(R.id.text_pick_2_stats);
+        textPick2ValueIcon = view.findViewById(R.id.text_pick_2_value_icon);
+        textPick2ValueScore = view.findViewById(R.id.text_pick_2_value_score);
         textPick3Number = view.findViewById(R.id.text_pick_3_number);
         textPick3Player = view.findViewById(R.id.text_pick_3_player);
         textPick3InjuryStatus = view.findViewById(R.id.text_pick_3_injury_status);
@@ -261,14 +318,53 @@ public class DraftFragment extends Fragment {
         textPick3Adp = view.findViewById(R.id.text_pick_3_adp);
         textPick3PositionRank = view.findViewById(R.id.text_pick_3_position_rank);
         textPick3Stats = view.findViewById(R.id.text_pick_3_stats);
+        textPick3ValueIcon = view.findViewById(R.id.text_pick_3_value_icon);
+        textPick3ValueScore = view.findViewById(R.id.text_pick_3_value_score);
         
         // Action Buttons
         buttonViewHistory = view.findViewById(R.id.button_view_history);
+        buttonViewAnalytics = view.findViewById(R.id.button_view_analytics);
+        buttonUndoLastPick = view.findViewById(R.id.button_undo_last_pick);
         buttonResetDraft = view.findViewById(R.id.button_reset_draft);
+        
+        // Team Roster Button (Req 1.1, 1.2)
+        buttonViewRoster = view.findViewById(R.id.button_view_roster);
+        buttonViewRoster.setOnClickListener(v -> showTeamRosterDialog());
+        
+        // Stopwatch
+        textStopwatch = view.findViewById(R.id.text_stopwatch);
+        stopwatchHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        
+        // Draft Info Collapse/Expand
+        layoutDraftInfoHeader = view.findViewById(R.id.layout_draft_info_header);
+        layoutDraftInfoDetails = view.findViewById(R.id.layout_draft_info_details);
+        iconCollapseExpand = view.findViewById(R.id.icon_collapse_expand);
+        
+        // Set up collapse/expand click handler
+        layoutDraftInfoHeader.setOnClickListener(v -> toggleDraftInfoCollapse());
         
         // Set up button click handlers
         buttonViewHistory.setOnClickListener(v -> launchDraftHistoryActivity());
+        buttonViewAnalytics.setOnClickListener(v -> showDraftCompletionDialog());
+        buttonUndoLastPick.setOnClickListener(v -> showUndoLastPickConfirmation());
         buttonResetDraft.setOnClickListener(v -> showResetConfirmationDialog());
+    }
+    
+    /**
+     * Toggle the collapse/expand state of the draft info section.
+     */
+    private void toggleDraftInfoCollapse() {
+        isDraftInfoExpanded = !isDraftInfoExpanded;
+        
+        if (isDraftInfoExpanded) {
+            // Expand
+            layoutDraftInfoDetails.setVisibility(View.VISIBLE);
+            iconCollapseExpand.setText("▼");
+        } else {
+            // Collapse
+            layoutDraftInfoDetails.setVisibility(View.GONE);
+            iconCollapseExpand.setText("▶");
+        }
     }
     
     /**
@@ -285,6 +381,110 @@ public class DraftFragment extends Fragment {
         return null;
     }
     
+    // Walkthrough
+    private DraftWalkthrough walkthrough;
+    
+    /**
+     * Show the walkthrough overlay on first launch.
+     */
+    private void showWalkthroughIfNeeded() {
+        if (getView() == null) return;
+        walkthrough = new DraftWalkthrough(getView());
+        if (walkthrough.shouldShow()) {
+            walkthrough.start();
+        }
+    }
+    
+    private final Runnable stopwatchRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (stopwatchRunning && textStopwatch != null) {
+                long elapsed = System.currentTimeMillis() - stopwatchStartTime;
+                int totalSeconds = (int) (elapsed / 1000);
+                int minutes = totalSeconds / 60;
+                int seconds = totalSeconds % 60;
+                textStopwatch.setText(String.format("%d:%02d", minutes, seconds));
+                
+                // Color changes: orange < 1min, red >= 2min
+                if (totalSeconds >= 120) {
+                    textStopwatch.setTextColor(0xFFD32F2F); // Red
+                } else if (totalSeconds >= 60) {
+                    textStopwatch.setTextColor(0xFFFF8C00); // Orange
+                } else {
+                    textStopwatch.setTextColor(0xFF4CAF50); // Green
+                }
+                
+                stopwatchHandler.postDelayed(this, 1000);
+            }
+        }
+    };
+    
+    /**
+     * Start or restart the stopwatch for the current pick.
+     */
+    private void startStopwatch() {
+        stopwatchStartTime = System.currentTimeMillis();
+        stopwatchRunning = true;
+        textStopwatch.setText("0:00");
+        textStopwatch.setTextColor(0xFF4CAF50); // Green
+        stopwatchHandler.removeCallbacks(stopwatchRunnable);
+        stopwatchHandler.post(stopwatchRunnable);
+        
+        // Persist start time so it survives app switching
+        if (getContext() != null) {
+            getContext().getSharedPreferences("FantasyDraftPrefs", 0)
+                    .edit().putLong(PREF_STOPWATCH_START, stopwatchStartTime).apply();
+        }
+    }
+    
+    /**
+     * Resume the stopwatch from a persisted start time.
+     */
+    private void resumeStopwatch() {
+        if (getContext() == null) return;
+        long saved = getContext().getSharedPreferences("FantasyDraftPrefs", 0)
+                .getLong(PREF_STOPWATCH_START, 0);
+        if (saved > 0) {
+            stopwatchStartTime = saved;
+        } else {
+            stopwatchStartTime = System.currentTimeMillis();
+        }
+        stopwatchRunning = true;
+        stopwatchHandler.removeCallbacks(stopwatchRunnable);
+        stopwatchHandler.post(stopwatchRunnable);
+    }
+    
+    /**
+     * Stop the stopwatch.
+     */
+    private void stopStopwatch() {
+        stopwatchRunning = false;
+        stopwatchHandler.removeCallbacks(stopwatchRunnable);
+    }
+    
+    /**
+     * Update stopwatch visibility based on config setting.
+     */
+    private void updateStopwatchVisibility() {
+        MainActivity mainActivity = getMainActivity();
+        if (mainActivity == null) return;
+        
+        DraftConfig config = mainActivity.getCurrentConfig();
+        DraftState state = mainActivity.getCurrentState();
+        boolean enabled = config != null && config.isStopwatchEnabled();
+        boolean draftActive = state != null && !state.isComplete();
+        
+        if (enabled && draftActive) {
+            textStopwatch.setVisibility(View.VISIBLE);
+            if (!stopwatchRunning) {
+                resumeStopwatch();
+            }
+        } else {
+            textStopwatch.setVisibility(View.GONE);
+            stopStopwatch();
+        }
+    }
+    
     /**
      * Update all UI components with current draft state.
      * Requirements: 2.2, 2.3, 2.4, 2.7
@@ -295,6 +495,7 @@ public class DraftFragment extends Fragment {
         updatePositionCounts();
         updateRecentPicks();
         updateDraftButtons();
+        updateStopwatchVisibility();
     }
     
     /**
@@ -344,8 +545,18 @@ public class DraftFragment extends Fragment {
                 if (teamIndex >= 0 && teamIndex < teams.size()) {
                     Team currentTeam = teams.get(teamIndex);
                     textCurrentTeam.setText("On the clock: " + currentTeam.getName());
+                    textCurrentTeam.setVisibility(View.VISIBLE);
                 }
             }
+            
+            // Show/hide roster button based on draft active state (Req 1.4)
+            boolean isDraftActive = !currentState.isComplete();
+            buttonViewRoster.setVisibility(isDraftActive ? View.VISIBLE : View.GONE);
+            textCurrentTeam.setVisibility(isDraftActive ? View.VISIBLE : View.GONE);
+        } else {
+            // Hide roster button and team when state is not available
+            buttonViewRoster.setVisibility(View.GONE);
+            textCurrentTeam.setVisibility(View.GONE);
         }
     }
     
@@ -360,10 +571,30 @@ public class DraftFragment extends Fragment {
         }
         
         PlayerManager playerManager = mainActivity.getPlayerManager();
-        Player bestPlayer = playerManager.getBestAvailable(playerManager.getPlayers());
+        Player bestPlayer;
+        if ("Overall".equals(selectedPositionFilter)) {
+            bestPlayer = playerManager.getBestAvailable(playerManager.getPlayers());
+        } else if ("Fav".equals(selectedPositionFilter)) {
+            bestPlayer = playerManager.getBestAvailableFavorite(playerManager.getPlayers());
+        } else {
+            bestPlayer = playerManager.getBestAvailableByPosition(playerManager.getPlayers(), selectedPositionFilter);
+        }
         
         if (bestPlayer != null) {
             textBestPlayerName.setText(bestPlayer.getName());
+
+            // Hyperlink player name to ESPN page in blue
+            String espnUrl = bestPlayer.getEspnUrl();
+            if (espnUrl != null) {
+                textBestPlayerName.setTextColor(0xFF1565C0); // Blue
+                textBestPlayerName.setOnClickListener(v -> {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(espnUrl));
+                    startActivity(browserIntent);
+                });
+            } else {
+                textBestPlayerName.setTextColor(0xFF1565C0); // Blue even without link
+                textBestPlayerName.setOnClickListener(null);
+            }
             
             // Display team and position rank instead of position code and overall rank
             String positionInfo = "";
@@ -421,8 +652,6 @@ public class DraftFragment extends Fragment {
                 textBestPlayerStats.setVisibility(View.GONE);
             }
             
-            // Set player name to dark text color (for light background)
-            textBestPlayerName.setTextColor(getResources().getColor(R.color.text_on_light_bg, null));
             
             // Set position text to FFL position color
             int positionColor = PositionColors.getDarkColorForPosition(bestPlayer.getPosition());
@@ -435,6 +664,51 @@ public class DraftFragment extends Fragment {
             
             // Enable draft button
             buttonDraftBestPlayer.setEnabled(true);
+            
+            // Apply favorite highlight or position gradient to best available card
+            if (bestPlayer.isFavorite()) {
+                // Solid favorite color for the whole card
+                cardBestAvailable.setCardBackgroundColor(ContextCompat.getColor(requireContext(), R.color.favorite_highlight));
+            } else {
+                // Subtle gradient from position color tint to white/dark based on theme
+                int posColor = PositionColors.getColorForPosition(bestPlayer.getPosition());
+                
+                // Check if dark mode is enabled
+                boolean isDarkMode = (getResources().getConfiguration().uiMode & 
+                        android.content.res.Configuration.UI_MODE_NIGHT_MASK) == 
+                        android.content.res.Configuration.UI_MODE_NIGHT_YES;
+                
+                int lightTint, endColor;
+                if (isDarkMode) {
+                    // Dark mode: blend with dark gray instead of white
+                    lightTint = blendColor(posColor, 0xFF2C2C2C, 0.70f);
+                    endColor = 0xFF1E1E1E;
+                } else {
+                    // Light mode: blend with white
+                    lightTint = blendColor(posColor, 0xFFFFFFFF, 0.85f);
+                    endColor = 0xFFFFFFFF;
+                }
+                
+                GradientDrawable gradient = new GradientDrawable(
+                        GradientDrawable.Orientation.TOP_BOTTOM,
+                        new int[]{lightTint, endColor});
+                gradient.setCornerRadius(8);
+                cardBestAvailable.setBackground(gradient);
+            }
+            
+            // Animate swipe-up when best available player changes
+            String currentId = bestPlayer.getId();
+            if (lastBestPlayerId != null && !lastBestPlayerId.equals(currentId)) {
+                cardBestAvailable.setTranslationY(cardBestAvailable.getHeight() > 0 ? cardBestAvailable.getHeight() : 120);
+                cardBestAvailable.setAlpha(0f);
+                cardBestAvailable.animate()
+                        .translationY(0)
+                        .alpha(1f)
+                        .setDuration(300)
+                        .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                        .start();
+            }
+            lastBestPlayerId = currentId;
         } else {
             textBestPlayerName.setText("No players available");
             textBestPlayerPosition.setText("--");
@@ -449,7 +723,10 @@ public class DraftFragment extends Fragment {
             textBestPlayerPositionBadge.setBackground(badgeCircle);
             
             // Reset to default colors
-            textBestPlayerName.setTextColor(getResources().getColor(R.color.text_on_light_bg, null));
+            android.util.TypedValue tv2 = new android.util.TypedValue();
+            requireContext().getTheme().resolveAttribute(android.R.attr.textColorPrimary, tv2, true);
+            textBestPlayerName.setTextColor(getResources().getColor(tv2.resourceId, null));
+            textBestPlayerName.setOnClickListener(null);
             textBestPlayerPosition.setTextColor(getResources().getColor(R.color.text_secondary, null));
             
             // Reset button to default background
@@ -457,6 +734,10 @@ public class DraftFragment extends Fragment {
             
             // Disable draft button
             buttonDraftBestPlayer.setEnabled(false);
+            
+            // Reset favorite highlight on best available card
+            View bestPlayerInfoView = (View) textBestPlayerName.getParent().getParent();
+            bestPlayerInfoView.setBackgroundColor(0x00000000); // Transparent default
         }
     }
     
@@ -535,6 +816,119 @@ public class DraftFragment extends Fragment {
         textCountTE.setText(String.valueOf(teCount));
         textCountDST.setText(String.valueOf(dstCount));
         textCountK.setText(String.valueOf(kCount));
+        
+        // Update accessibility content descriptions
+        updatePositionCountAccessibility(wrCount, rbCount, qbCount, teCount, dstCount, kCount);
+    }
+    
+    /**
+     * Update accessibility content descriptions for position counts
+     */
+    private void updatePositionCountAccessibility(int wrCount, int rbCount, int qbCount, 
+                                                   int teCount, int dstCount, int kCount) {
+        String scope = showLeagueCounts ? "league-wide" : "on your team";
+        
+        if (textPositionWR != null) {
+            textPositionWR.setContentDescription("Wide Receiver. " + wrCount + " drafted " + scope);
+        }
+        if (textPositionRB != null) {
+            textPositionRB.setContentDescription("Running Back. " + rbCount + " drafted " + scope);
+        }
+        if (textPositionQB != null) {
+            textPositionQB.setContentDescription("Quarterback. " + qbCount + " drafted " + scope);
+        }
+        if (textPositionTE != null) {
+            textPositionTE.setContentDescription("Tight End. " + teCount + " drafted " + scope);
+        }
+        if (textPositionDST != null) {
+            textPositionDST.setContentDescription("Defense. " + dstCount + " drafted " + scope);
+        }
+        if (textPositionK != null) {
+            textPositionK.setContentDescription("Kicker. " + kCount + " drafted " + scope);
+        }
+    }
+    
+    /*
+     * Draft board methods removed - not enough screen space
+     * Keeping analytics dialog for post-draft grading
+     */
+    
+    /**
+     * Update the toggle slider appearance based on current mode.
+     */
+    private void updateToggleAppearance() {
+        if (showLeagueCounts) {
+            // League mode selected
+            buttonLeagueView.setBackgroundResource(R.drawable.toggle_slider_selected);
+            buttonLeagueView.setTextColor(0xFFFFFFFF); // White
+            buttonTeamView.setBackgroundResource(android.R.color.transparent);
+            if (getContext() != null) {
+                buttonTeamView.setTextColor(getContext().getResources().getColor(R.color.text_secondary, null));
+            }
+        } else {
+            // Team mode selected
+            buttonTeamView.setBackgroundResource(R.drawable.toggle_slider_selected);
+            buttonTeamView.setTextColor(0xFFFFFFFF); // White
+            buttonLeagueView.setBackgroundResource(android.R.color.transparent);
+            if (getContext() != null) {
+                buttonLeagueView.setTextColor(getContext().getResources().getColor(R.color.text_secondary, null));
+            }
+        }
+    }
+    
+    /**
+     * Set up the horizontal position filter buttons for Best Available.
+     */
+    private void setupPositionFilterButtons() {
+        layoutBestAvailableFilters.removeAllViews();
+        for (String option : POSITION_FILTER_OPTIONS) {
+            TextView btn = new TextView(getContext());
+            btn.setText(option);
+            btn.setTextSize(12);
+            btn.setPadding(28, 12, 28, 12);
+
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            params.setMarginEnd(6);
+            btn.setLayoutParams(params);
+
+            updateFilterButtonAppearance(btn, option.equals(selectedPositionFilter));
+
+            btn.setOnClickListener(v -> {
+                selectedPositionFilter = option;
+                updatePositionFilterButtons();
+                updateBestAvailable();
+            });
+
+            layoutBestAvailableFilters.addView(btn);
+        }
+    }
+
+    /**
+     * Update all position filter button appearances to reflect current selection.
+     */
+    private void updatePositionFilterButtons() {
+        for (int i = 0; i < layoutBestAvailableFilters.getChildCount(); i++) {
+            TextView btn = (TextView) layoutBestAvailableFilters.getChildAt(i);
+            updateFilterButtonAppearance(btn, POSITION_FILTER_OPTIONS[i].equals(selectedPositionFilter));
+        }
+    }
+
+    /**
+     * Update a single filter button's appearance based on selected state.
+     */
+    private void updateFilterButtonAppearance(TextView btn, boolean selected) {
+        GradientDrawable bg = new GradientDrawable();
+        bg.setCornerRadius(48);
+        if (selected) {
+            bg.setColor(ContextCompat.getColor(requireContext(), R.color.colorPrimary));
+            btn.setTextColor(0xFFFFFFFF);
+        } else {
+            bg.setColor(0xFFE0E0E0);
+            btn.setTextColor(0xFF333333);
+        }
+        btn.setBackground(bg);
     }
     
     /**
@@ -552,56 +946,123 @@ public class DraftFragment extends Fragment {
         if (pickHistory == null || pickHistory.isEmpty()) {
             // No picks yet - clear all slots
             clearPickSlot(textPick1Number, textPick1Player, textPick1InjuryStatus, textPick1Details, 
-                    textPick1Rank, textPick1Adp, textPick1PositionRank, textPick1Stats);
+                    textPick1Rank, textPick1Adp, textPick1PositionRank, textPick1Stats,
+                    textPick1ValueIcon, textPick1ValueScore);
             clearPickSlot(textPick2Number, textPick2Player, textPick2InjuryStatus, textPick2Details,
-                    textPick2Rank, textPick2Adp, textPick2PositionRank, textPick2Stats);
+                    textPick2Rank, textPick2Adp, textPick2PositionRank, textPick2Stats,
+                    textPick2ValueIcon, textPick2ValueScore);
             clearPickSlot(textPick3Number, textPick3Player, textPick3InjuryStatus, textPick3Details,
-                    textPick3Rank, textPick3Adp, textPick3PositionRank, textPick3Stats);
+                    textPick3Rank, textPick3Adp, textPick3PositionRank, textPick3Stats,
+                    textPick3ValueIcon, textPick3ValueScore);
             
             // Set first slot message
             textPick1Player.setText("No picks yet");
+            
+            // Hide undo button when no picks
+            buttonUndoLastPick.setVisibility(View.GONE);
+            lastPickCount = 0;
             return;
         }
         
-        // Get the 3 most recent picks (in reverse order - most recent first)
+        // Show undo button when there are picks
+        buttonUndoLastPick.setVisibility(View.VISIBLE);
+        
+        // Detect if a new pick was just made
         int totalPicks = pickHistory.size();
+        boolean isNewPick = lastPickCount >= 0 && totalPicks > lastPickCount;
+        lastPickCount = totalPicks;
         
         // Pick 1 (most recent)
         if (totalPicks >= 1) {
             Pick pick1 = pickHistory.get(totalPicks - 1);
             updatePickSlot(pick1, textPick1Number, textPick1Player, textPick1InjuryStatus, textPick1Details,
-                    textPick1Rank, textPick1Adp, textPick1PositionRank, textPick1Stats);
+                    textPick1Rank, textPick1Adp, textPick1PositionRank, textPick1Stats,
+                    textPick1ValueIcon, textPick1ValueScore, pickSlot1);
         } else {
             clearPickSlot(textPick1Number, textPick1Player, textPick1InjuryStatus, textPick1Details,
-                    textPick1Rank, textPick1Adp, textPick1PositionRank, textPick1Stats);
+                    textPick1Rank, textPick1Adp, textPick1PositionRank, textPick1Stats,
+                    textPick1ValueIcon, textPick1ValueScore);
         }
         
         // Pick 2 (second most recent)
         if (totalPicks >= 2) {
             Pick pick2 = pickHistory.get(totalPicks - 2);
             updatePickSlot(pick2, textPick2Number, textPick2Player, textPick2InjuryStatus, textPick2Details,
-                    textPick2Rank, textPick2Adp, textPick2PositionRank, textPick2Stats);
+                    textPick2Rank, textPick2Adp, textPick2PositionRank, textPick2Stats,
+                    textPick2ValueIcon, textPick2ValueScore, pickSlot2);
         } else {
             clearPickSlot(textPick2Number, textPick2Player, textPick2InjuryStatus, textPick2Details,
-                    textPick2Rank, textPick2Adp, textPick2PositionRank, textPick2Stats);
+                    textPick2Rank, textPick2Adp, textPick2PositionRank, textPick2Stats,
+                    textPick2ValueIcon, textPick2ValueScore);
         }
         
         // Pick 3 (third most recent)
         if (totalPicks >= 3) {
             Pick pick3 = pickHistory.get(totalPicks - 3);
             updatePickSlot(pick3, textPick3Number, textPick3Player, textPick3InjuryStatus, textPick3Details,
-                    textPick3Rank, textPick3Adp, textPick3PositionRank, textPick3Stats);
+                    textPick3Rank, textPick3Adp, textPick3PositionRank, textPick3Stats,
+                    textPick3ValueIcon, textPick3ValueScore, pickSlot3);
         } else {
             clearPickSlot(textPick3Number, textPick3Player, textPick3InjuryStatus, textPick3Details,
-                    textPick3Rank, textPick3Adp, textPick3PositionRank, textPick3Stats);
+                    textPick3Rank, textPick3Adp, textPick3PositionRank, textPick3Stats,
+                    textPick3ValueIcon, textPick3ValueScore);
         }
+        
+        // Animate slots when a new pick arrives
+        if (isNewPick) {
+            animateNewPick();
+        }
+    }
+    
+    /**
+     * Animate the recent pick slots when a new pick is made.
+     * Slot 1 slides in from the left, slots 2 and 3 fade in from their new positions.
+     */
+    private void animateNewPick() {
+        // Slot 1 (newest): slide in from left with fade
+        pickSlot1.setTranslationX(-pickSlot1.getWidth());
+        pickSlot1.setAlpha(0f);
+        pickSlot1.animate()
+                .translationX(0)
+                .alpha(1f)
+                .setDuration(300)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                .start();
+        
+        // Slot 2: subtle fade to show content shift
+        pickSlot2.setAlpha(0.3f);
+        pickSlot2.animate()
+                .alpha(1f)
+                .setDuration(250)
+                .setStartDelay(100)
+                .start();
+        
+        // Slot 3: subtle fade
+        pickSlot3.setAlpha(0.3f);
+        pickSlot3.animate()
+                .alpha(1f)
+                .setDuration(250)
+                .setStartDelay(150)
+                .start();
+    }
+    
+    /**
+     * Blend two colors together. ratio=0 returns color1, ratio=1 returns color2.
+     */
+    private static int blendColor(int color1, int color2, float ratio) {
+        int a1 = (color1 >> 24) & 0xFF, r1 = (color1 >> 16) & 0xFF, g1 = (color1 >> 8) & 0xFF, b1 = color1 & 0xFF;
+        int a2 = (color2 >> 24) & 0xFF, r2 = (color2 >> 16) & 0xFF, g2 = (color2 >> 8) & 0xFF, b2 = color2 & 0xFF;
+        float inv = 1f - ratio;
+        return ((int)(a1 * inv + a2 * ratio) << 24) | ((int)(r1 * inv + r2 * ratio) << 16)
+                | ((int)(g1 * inv + g2 * ratio) << 8) | (int)(b1 * inv + b2 * ratio);
     }
     
     /**
      * Update a single pick slot with pick information.
      */
     private void updatePickSlot(Pick pick, TextView numberView, TextView playerView, TextView injuryStatusView, TextView detailsView,
-            TextView rankView, TextView adpView, TextView positionRankView, TextView statsView) {
+            TextView rankView, TextView adpView, TextView positionRankView, TextView statsView,
+            TextView valueIconView, TextView valueScoreView, LinearLayout slotContainer) {
         MainActivity mainActivity = getMainActivity();
         if (mainActivity == null) {
             return;
@@ -617,6 +1078,19 @@ public class DraftFragment extends Fragment {
         Player player = playerManager.getPlayerById(pick.getPlayerId());
         if (player != null) {
             playerView.setText(player.getName());
+            
+            // Hyperlink player name to ESPN page in blue
+            String espnUrl = player.getEspnUrl();
+            if (espnUrl != null) {
+                playerView.setTextColor(0xFF1565C0); // Blue
+                playerView.setOnClickListener(v -> {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(espnUrl));
+                    startActivity(browserIntent);
+                });
+            } else {
+                playerView.setTextColor(0xFF1565C0); // Blue even without link
+                playerView.setOnClickListener(null);
+            }
             
             // Display rank
             rankView.setText(String.valueOf(player.getRank()));
@@ -697,14 +1171,65 @@ public class DraftFragment extends Fragment {
                 details += " → " + team.getName();
             }
             detailsView.setText(details);
+            
+            // Calculate and display value score
+            int valueScore = PickValueCalculator.calculateValueScore(pick, player);
+            android.util.Log.d("DraftFragment", "Pick " + pick.getPickNumber() + " - Player: " + player.getName() + 
+                ", ADP: " + player.getPffRank() + ", ValueScore: " + valueScore);
+            if (player.getPffRank() > 0) {
+                PickValueCalculator.ValueTier tier = PickValueCalculator.getValueTier(valueScore);
+                String icon = PickValueCalculator.getValueIcon(tier);
+                int color = PickValueCalculator.getValueColor(tier);
+                String scoreText = PickValueCalculator.getValueString(valueScore);
+                
+                android.util.Log.d("DraftFragment", "Showing value indicator: " + icon + " " + scoreText);
+                
+                valueIconView.setText(icon);
+                valueIconView.setTextColor(color);
+                valueIconView.setVisibility(View.VISIBLE);
+                
+                valueScoreView.setText(scoreText);
+                valueScoreView.setTextColor(color);
+                valueScoreView.setVisibility(View.VISIBLE);
+            } else {
+                android.util.Log.d("DraftFragment", "Hiding value indicator - pffRank: " + player.getPffRank());
+                valueIconView.setVisibility(View.GONE);
+                valueScoreView.setVisibility(View.GONE);
+            }
+            
+            // Apply favorite highlight to pick slot
+            if (player.isFavorite()) {
+                slotContainer.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.favorite_highlight));
+                // Use theme-aware text color on favorite highlight (dark in light mode, white in dark mode)
+                int textOnFavorite = ContextCompat.getColor(requireContext(), R.color.text_on_favorite);
+                playerView.setTextColor(0xFF1565C0); // Keep blue for URL
+                detailsView.setTextColor(textOnFavorite);
+                rankView.setTextColor(textOnFavorite);
+                adpView.setTextColor(textOnFavorite);
+                positionRankView.setTextColor(textOnFavorite);
+                statsView.setTextColor(textOnFavorite);
+            } else {
+                slotContainer.setBackgroundColor(0x00000000); // Transparent default
+                playerView.setTextColor(0xFF1565C0); // Blue for URL
+                detailsView.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+                rankView.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+                adpView.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+                positionRankView.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+                statsView.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+            }
         } else {
             playerView.setText("Unknown Player");
+            playerView.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+            playerView.setOnClickListener(null);
             rankView.setText("-");
             adpView.setVisibility(View.GONE);
             positionRankView.setVisibility(View.GONE);
             statsView.setVisibility(View.GONE);
             injuryStatusView.setVisibility(View.GONE);
             detailsView.setText("");
+            valueIconView.setVisibility(View.GONE);
+            valueScoreView.setVisibility(View.GONE);
+            slotContainer.setBackgroundColor(0x00000000); // Reset highlight for unknown player
         }
     }
     
@@ -712,13 +1237,18 @@ public class DraftFragment extends Fragment {
      * Clear a pick slot (show placeholder).
      */
     private void clearPickSlot(TextView numberView, TextView playerView, TextView injuryStatusView, TextView detailsView,
-            TextView rankView, TextView adpView, TextView positionRankView, TextView statsView) {
+            TextView rankView, TextView adpView, TextView positionRankView, TextView statsView,
+            TextView valueIconView, TextView valueScoreView) {
         numberView.setText("--");
         playerView.setText("--");
+        playerView.setOnClickListener(null);
+        playerView.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
         rankView.setText("-");
         adpView.setVisibility(View.GONE);
         positionRankView.setVisibility(View.GONE);
         statsView.setVisibility(View.GONE);
+        valueIconView.setVisibility(View.GONE);
+        valueScoreView.setVisibility(View.GONE);
         injuryStatusView.setVisibility(View.GONE);
         detailsView.setText("");
         
@@ -749,6 +1279,9 @@ public class DraftFragment extends Fragment {
         buttonDraftBestPlayer.setEnabled(!isDraftComplete);
         buttonDraftBestPlayer.setAlpha(isDraftComplete ? 0.5f : 1.0f);
         
+        // Show Analytics button when draft is complete
+        buttonViewAnalytics.setVisibility(isDraftComplete ? View.VISIBLE : View.GONE);
+        
         // Update click handlers to show message when disabled
         if (isDraftComplete) {
             buttonMakePick.setOnClickListener(v -> {
@@ -773,6 +1306,41 @@ public class DraftFragment extends Fragment {
         buttonResetDraft.setAlpha(1.0f);
         
         // View History link is always enabled (TextView, no need to set enabled/alpha)
+    }
+    
+    /**
+     * Show the team roster dialog for viewing drafted players.
+     * Gets teams from MainActivity, determines the current on-the-clock team,
+     * and constructs/shows the TeamRosterDialog.
+     * Requirements: 1.1, 1.2, 1.3
+     */
+    private void showTeamRosterDialog() {
+        MainActivity mainActivity = getMainActivity();
+        if (mainActivity == null) {
+            return;
+        }
+        
+        List<Team> teams = mainActivity.getTeams();
+        DraftManager draftManager = mainActivity.getDraftManager();
+        PlayerManager playerManager = mainActivity.getPlayerManager();
+        DraftState currentState = mainActivity.getCurrentState();
+        DraftConfig currentConfig = mainActivity.getCurrentConfig();
+        
+        if (teams == null || teams.isEmpty() || currentState == null || currentConfig == null) {
+            return;
+        }
+        
+        // Get current on-the-clock team ID (Req 1.3)
+        int teamIndex = draftManager.getCurrentTeamIndex(
+                currentState, currentConfig, teams.size());
+        String currentTeamId = "";
+        if (teamIndex >= 0 && teamIndex < teams.size()) {
+            currentTeamId = teams.get(teamIndex).getId();
+        }
+        
+        TeamRosterDialog dialog = new TeamRosterDialog(
+                getActivity(), teams, currentTeamId, draftManager, playerManager, currentConfig);
+        dialog.show();
     }
     
     /**
@@ -867,6 +1435,11 @@ public class DraftFragment extends Fragment {
             // Update UI
             updateUI();
             
+            // Restart stopwatch for next pick
+            if (textStopwatch.getVisibility() == View.VISIBLE) {
+                startStopwatch();
+            }
+            
             // Check if draft is complete and show completion dialog
             if (newState.isComplete()) {
                 showDraftCompletionDialog();
@@ -876,9 +1449,60 @@ public class DraftFragment extends Fragment {
                     selectedPlayer.getName() + " drafted by " + currentTeam.getName(), 
                     Toast.LENGTH_SHORT).show();
             
+            // Send SMS update if enabled
+            sendSmsDraftUpdate(selectedPlayer, currentTeam, currentState, overallPickNumber);
+            
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error drafting player: " + e.getMessage(), 
                     Toast.LENGTH_LONG).show();
+        }
+    }
+    
+    /**
+     * Send SMS draft update to configured recipients.
+     */
+    private void sendSmsDraftUpdate(Player player, Team team, DraftState state, int overallPick) {
+        if (getContext() == null) return;
+        
+        android.content.SharedPreferences prefs = getContext().getSharedPreferences("FantasyDraftPrefs", 0);
+        boolean smsEnabled = prefs.getBoolean("sms_enabled", false);
+        String numbersRaw = prefs.getString("sms_numbers", "");
+        
+        if (!smsEnabled || numbersRaw.isEmpty()) return;
+        
+        // Build the message
+        StringBuilder msg = new StringBuilder();
+        msg.append("🏈 DRAFT PICK #").append(overallPick).append("\n");
+        msg.append("Drafted by: ").append(team.getName()).append("\n");
+        msg.append("Round ").append(state.getCurrentRound())
+           .append(", Pick ").append(state.getCurrentPickInRound()).append("\n\n");
+        msg.append(player.getName()).append(" - ").append(player.getPosition());
+        if (player.getNflTeam() != null && !player.getNflTeam().isEmpty()) {
+            msg.append(", ").append(player.getNflTeam());
+        }
+        msg.append("\n");
+        
+        // Parse phone numbers (one per line, strip non-digits for the URI)
+        String[] lines = numbersRaw.split("\\n");
+        StringBuilder recipients = new StringBuilder();
+        for (String line : lines) {
+            String num = line.trim();
+            if (!num.isEmpty()) {
+                if (recipients.length() > 0) recipients.append(";");
+                recipients.append(num);
+            }
+        }
+        
+        if (recipients.length() == 0) return;
+        
+        // Launch SMS intent
+        Intent smsIntent = new Intent(Intent.ACTION_SENDTO);
+        smsIntent.setData(android.net.Uri.parse("smsto:" + recipients));
+        smsIntent.putExtra("sms_body", msg.toString());
+        try {
+            startActivity(smsIntent);
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "No SMS app found", Toast.LENGTH_SHORT).show();
         }
     }
     
@@ -893,7 +1517,14 @@ public class DraftFragment extends Fragment {
         }
         
         PlayerManager playerManager = mainActivity.getPlayerManager();
-        Player bestPlayer = playerManager.getBestAvailable(playerManager.getPlayers());
+        Player bestPlayer;
+        if ("Overall".equals(selectedPositionFilter)) {
+            bestPlayer = playerManager.getBestAvailable(playerManager.getPlayers());
+        } else if ("Fav".equals(selectedPositionFilter)) {
+            bestPlayer = playerManager.getBestAvailableFavorite(playerManager.getPlayers());
+        } else {
+            bestPlayer = playerManager.getBestAvailableByPosition(playerManager.getPlayers(), selectedPositionFilter);
+        }
         
         if (bestPlayer == null) {
             Toast.makeText(getContext(), "No players available", Toast.LENGTH_SHORT).show();
@@ -1007,6 +1638,47 @@ public class DraftFragment extends Fragment {
     }
     
     /**
+     * Show confirmation dialog before undoing the last pick.
+     */
+    private void showUndoLastPickConfirmation() {
+        MainActivity mainActivity = getMainActivity();
+        if (mainActivity == null) return;
+        
+        List<Pick> pickHistory = mainActivity.getPickHistory();
+        if (pickHistory == null || pickHistory.isEmpty()) {
+            Toast.makeText(getContext(), "No picks to undo", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        Pick lastPick = pickHistory.get(pickHistory.size() - 1);
+        PlayerManager playerManager = mainActivity.getPlayerManager();
+        Player player = playerManager.getPlayerById(lastPick.getPlayerId());
+        String playerName = player != null ? player.getName() : "Unknown Player";
+        
+        new AlertDialog.Builder(getActivity())
+                .setTitle("Undo Pick")
+                .setMessage("Undo pick #" + lastPick.getPickNumber() + " (" + playerName + ")?")
+                .setPositiveButton("Undo", (dialog, which) -> undoLastPick())
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+    
+    /**
+     * Undo the most recent pick directly from the Recent Picks section.
+     */
+    private void undoLastPick() {
+        MainActivity mainActivity = getMainActivity();
+        if (mainActivity == null) return;
+        
+        List<Pick> pickHistory = mainActivity.getPickHistory();
+        if (pickHistory == null || pickHistory.isEmpty()) return;
+        
+        Pick lastPick = pickHistory.get(pickHistory.size() - 1);
+        mainActivity.undoPick(lastPick);
+        updateUI();
+    }
+    
+    /**
      * Show confirmation dialog before resetting the draft.
      * Requirements: 2.5
      */
@@ -1020,16 +1692,44 @@ public class DraftFragment extends Fragment {
     }
     
     /**
-     * Show dialog when draft is complete.
+     * Show dialog when draft is complete with analytics.
      * Requirements: 2.8
      */
     private void showDraftCompletionDialog() {
-        new AlertDialog.Builder(getActivity())
-                .setTitle("Draft Complete!")
-                .setMessage("The draft is complete! You can export the results from the Draft History screen.")
-                .setPositiveButton("OK", null)
-                .setCancelable(true)
-                .show();
+        MainActivity mainActivity = getMainActivity();
+        if (mainActivity == null) return;
+        
+        // Get current team
+        DraftState currentState = mainActivity.getCurrentState();
+        DraftConfig currentConfig = mainActivity.getCurrentConfig();
+        List<Team> teams = mainActivity.getTeams();
+        DraftManager draftManager = mainActivity.getDraftManager();
+        PlayerManager playerManager = mainActivity.getPlayerManager();
+        List<Pick> pickHistory = mainActivity.getPickHistory();
+        
+        if (teams == null || teams.isEmpty()) {
+            // Fallback to simple dialog
+            new AlertDialog.Builder(getActivity())
+                    .setTitle("Draft Complete!")
+                    .setMessage("The draft is complete! You can export the results from the Draft History screen.")
+                    .setPositiveButton("OK", null)
+                    .setCancelable(true)
+                    .show();
+            return;
+        }
+        
+        // Get user's team (first team in list)
+        Team userTeam = teams.get(0);
+        
+        // Generate analytics with curve-based grading for all teams
+        List<com.fantasydraft.picker.models.DraftAnalytics> allAnalytics = 
+                com.fantasydraft.picker.utils.DraftAnalyzer.analyzeAllTeamsWithCurve(
+                        teams, pickHistory, playerManager);
+        
+        // Show analytics dialog with all teams
+        DraftAnalyticsDialog analyticsDialog = new DraftAnalyticsDialog(
+                getActivity(), allAnalytics, userTeam.getId());
+        analyticsDialog.show();
     }
     
     /**
@@ -1055,8 +1755,18 @@ public class DraftFragment extends Fragment {
             // Clear pick history
             pickHistory.clear();
             
+            // Reset position filter
+            selectedPositionFilter = "Overall";
+            updatePositionFilterButtons();
+            
             // Save the reset state
             mainActivity.saveDraftState();
+            
+            // Clear stopwatch persisted time
+            if (getContext() != null) {
+                getContext().getSharedPreferences("FantasyDraftPrefs", 0)
+                        .edit().remove(PREF_STOPWATCH_START).apply();
+            }
             
             // Update UI
             updateUI();

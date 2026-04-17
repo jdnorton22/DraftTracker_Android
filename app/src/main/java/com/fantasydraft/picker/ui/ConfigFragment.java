@@ -10,8 +10,10 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -49,10 +51,17 @@ public class ConfigFragment extends Fragment {
     private NumberPicker numberPickerRounds;
     private Spinner spinnerDraftFlow;
     private CheckBox checkboxSkipFirstRound;
+    private CheckBox checkboxStopwatchEnabled;
+    private CheckBox checkboxSmsEnabled;
+    private com.google.android.material.textfield.TextInputEditText inputSmsNewNumber;
+    private android.widget.LinearLayout layoutSmsNumbersList;
+    private java.util.ArrayList<String> smsNumbers = new java.util.ArrayList<>();
     private RecyclerView recyclerTeams;
     private Button buttonSaveConfig;
     private Button buttonImportPlayers;
     private Button buttonRefreshPlayerData;
+    private TextView textPlayerDataAge;
+    private TextView textDraftInProgressBanner;
     
     // Adapter
     private TeamConfigAdapter teamAdapter;
@@ -147,6 +156,28 @@ public class ConfigFragment extends Fragment {
             if (checkboxSkipFirstRound != null) {
                 checkboxSkipFirstRound.setChecked(config.isSkipFirstRound());
             }
+            
+            // Set stopwatch enabled checkbox
+            if (checkboxStopwatchEnabled != null) {
+                checkboxStopwatchEnabled.setChecked(config.isStopwatchEnabled());
+            }
+        }
+        
+        // Load SMS settings from SharedPreferences
+        if (getContext() != null) {
+            android.content.SharedPreferences prefs = getContext().getSharedPreferences("FantasyDraftPrefs", 0);
+            if (checkboxSmsEnabled != null) {
+                checkboxSmsEnabled.setChecked(prefs.getBoolean("sms_enabled", false));
+            }
+            String numbersRaw = prefs.getString("sms_numbers", "");
+            smsNumbers.clear();
+            if (!numbersRaw.isEmpty()) {
+                for (String line : numbersRaw.split("\\n")) {
+                    String num = line.trim();
+                    if (!num.isEmpty()) smsNumbers.add(num);
+                }
+            }
+            refreshSmsNumbersList();
         }
         
         // Load teams
@@ -174,10 +205,31 @@ public class ConfigFragment extends Fragment {
         numberPickerRounds = view.findViewById(R.id.number_picker_rounds);
         spinnerDraftFlow = view.findViewById(R.id.spinner_draft_flow);
         checkboxSkipFirstRound = view.findViewById(R.id.checkbox_skip_first_round);
+        checkboxStopwatchEnabled = view.findViewById(R.id.checkbox_stopwatch_enabled);
+        checkboxSmsEnabled = view.findViewById(R.id.checkbox_sms_enabled);
+        inputSmsNewNumber = view.findViewById(R.id.input_sms_new_number);
+        layoutSmsNumbersList = view.findViewById(R.id.layout_sms_numbers_list);
+        
+        view.findViewById(R.id.button_add_sms_number).setOnClickListener(v -> {
+            String num = inputSmsNewNumber.getText().toString().trim();
+            if (!num.isEmpty()) {
+                smsNumbers.add(num);
+                inputSmsNewNumber.setText("");
+                refreshSmsNumbersList();
+            }
+        });
         recyclerTeams = view.findViewById(R.id.recycler_teams);
         buttonSaveConfig = view.findViewById(R.id.button_save_config);
         buttonImportPlayers = view.findViewById(R.id.button_import_players);
         buttonRefreshPlayerData = view.findViewById(R.id.button_refresh_player_data);
+        textPlayerDataAge = view.findViewById(R.id.text_player_data_age);
+        textDraftInProgressBanner = view.findViewById(R.id.text_draft_in_progress_banner);
+        
+        // Position requirements container
+        LinearLayout layoutPositionRequirements = view.findViewById(R.id.layout_position_requirements);
+        if (layoutPositionRequirements != null) {
+            populatePositionRequirements(layoutPositionRequirements);
+        }
     }
     
     /**
@@ -234,6 +286,144 @@ public class ConfigFragment extends Fragment {
             if (config != null) {
                 numberPickerRounds.setValue(config.getNumberOfRounds());
             }
+        }
+    }
+    
+    /**
+     * Populate position requirements UI with controls for each position.
+     * Requirements: Position roster requirements configuration
+     */
+    private void populatePositionRequirements(android.widget.LinearLayout container) {
+        MainActivity mainActivity = getMainActivity();
+        if (mainActivity == null || getContext() == null) {
+            return;
+        }
+        
+        DraftConfig config = mainActivity.getCurrentConfig();
+        if (config == null) {
+            return;
+        }
+        
+        // Define positions in display order
+        String[] positions = {"QB", "RB", "WR", "TE", "K", "DST"};
+        
+        // Clear existing views
+        container.removeAllViews();
+        
+        // Create a view for each position
+        for (String position : positions) {
+            View itemView = LayoutInflater.from(getContext()).inflate(
+                R.layout.item_position_requirement, container, false);
+            
+            // Get views
+            TextView badgeText = itemView.findViewById(R.id.text_position_badge);
+            TextView minValueText = itemView.findViewById(R.id.text_min_value);
+            TextView maxValueText = itemView.findViewById(R.id.text_max_value);
+            Button minDecreaseBtn = itemView.findViewById(R.id.button_min_decrease);
+            Button minIncreaseBtn = itemView.findViewById(R.id.button_min_increase);
+            Button maxDecreaseBtn = itemView.findViewById(R.id.button_max_decrease);
+            Button maxIncreaseBtn = itemView.findViewById(R.id.button_max_increase);
+            Button maxDisableBtn = itemView.findViewById(R.id.button_max_disable);
+            
+            // Set position badge
+            badgeText.setText(position);
+            int color = com.fantasydraft.picker.utils.PositionColors.getColorForPosition(position);
+            badgeText.setBackgroundColor(color);
+            
+            // Get current requirements
+            DraftConfig.PositionRequirement requirement = config.getPositionRequirement(position);
+            if (requirement == null) {
+                requirement = new DraftConfig.PositionRequirement(1, -1);
+                config.setPositionRequirement(position, 1, -1);
+            }
+            
+            // Set initial values
+            minValueText.setText(String.valueOf(requirement.getMin()));
+            updateMaxValueDisplay(maxValueText, requirement.getMax());
+            
+            // Set up min click listeners
+            minDecreaseBtn.setOnClickListener(v -> {
+                int currentMin = Integer.parseInt(minValueText.getText().toString());
+                if (currentMin > 0) {
+                    int newMin = currentMin - 1;
+                    minValueText.setText(String.valueOf(newMin));
+                    DraftConfig.PositionRequirement req = config.getPositionRequirement(position);
+                    config.setPositionRequirement(position, newMin, req != null ? req.getMax() : -1);
+                }
+            });
+            
+            minIncreaseBtn.setOnClickListener(v -> {
+                int currentMin = Integer.parseInt(minValueText.getText().toString());
+                DraftConfig.PositionRequirement req = config.getPositionRequirement(position);
+                int currentMax = req != null ? req.getMax() : -1;
+                
+                // Allow increase if max is disabled (-1) or if min < max
+                if (currentMax == -1 || currentMin < currentMax) {
+                    int newMin = currentMin + 1;
+                    minValueText.setText(String.valueOf(newMin));
+                    config.setPositionRequirement(position, newMin, currentMax);
+                } else if (getContext() != null) {
+                    Toast.makeText(getContext(), "Min cannot exceed Max", Toast.LENGTH_SHORT).show();
+                }
+            });
+            
+            // Set up max click listeners
+            maxDecreaseBtn.setOnClickListener(v -> {
+                int currentMin = Integer.parseInt(minValueText.getText().toString());
+                DraftConfig.PositionRequirement req = config.getPositionRequirement(position);
+                int currentMax = req != null ? req.getMax() : -1;
+                
+                if (currentMax == -1) {
+                    // If disabled, set to a reasonable starting value (min + 5)
+                    int newMax = currentMin + 5;
+                    updateMaxValueDisplay(maxValueText, newMax);
+                    config.setPositionRequirement(position, currentMin, newMax);
+                } else if (currentMax > currentMin) {
+                    int newMax = currentMax - 1;
+                    updateMaxValueDisplay(maxValueText, newMax);
+                    config.setPositionRequirement(position, currentMin, newMax);
+                } else if (getContext() != null) {
+                    Toast.makeText(getContext(), "Max cannot be less than Min", Toast.LENGTH_SHORT).show();
+                }
+            });
+            
+            maxIncreaseBtn.setOnClickListener(v -> {
+                int currentMin = Integer.parseInt(minValueText.getText().toString());
+                DraftConfig.PositionRequirement req = config.getPositionRequirement(position);
+                int currentMax = req != null ? req.getMax() : -1;
+                
+                if (currentMax == -1) {
+                    // If disabled, set to a reasonable starting value (min + 5)
+                    int newMax = currentMin + 5;
+                    updateMaxValueDisplay(maxValueText, newMax);
+                    config.setPositionRequirement(position, currentMin, newMax);
+                } else {
+                    int newMax = currentMax + 1;
+                    updateMaxValueDisplay(maxValueText, newMax);
+                    config.setPositionRequirement(position, currentMin, newMax);
+                }
+            });
+            
+            maxDisableBtn.setOnClickListener(v -> {
+                int currentMin = Integer.parseInt(minValueText.getText().toString());
+                updateMaxValueDisplay(maxValueText, -1);
+                config.setPositionRequirement(position, currentMin, -1);
+            });
+            
+            // Add to container
+            container.addView(itemView);
+        }
+    }
+    
+    /**
+     * Update the max value display text.
+     * Shows "None" for -1 (no limit), otherwise shows the number.
+     */
+    private void updateMaxValueDisplay(TextView textView, int maxValue) {
+        if (maxValue == -1) {
+            textView.setText("None");
+        } else {
+            textView.setText(String.valueOf(maxValue));
         }
     }
     
@@ -522,6 +712,45 @@ public class ConfigFragment extends Fragment {
                 buttonRefreshPlayerData.setVisibility(View.GONE);
             }
         }
+        updatePlayerDataAge();
+    }
+
+    private void updatePlayerDataAge() {
+        if (textPlayerDataAge == null) return;
+        MainActivity mainActivity = getMainActivity();
+        if (mainActivity == null) {
+            textPlayerDataAge.setText("Player data: bundled default");
+            return;
+        }
+
+        java.io.File file = new java.io.File(mainActivity.getFilesDir(), "players_updated.json");
+        if (!file.exists()) {
+            textPlayerDataAge.setText("Player data: bundled default");
+            return;
+        }
+
+        long lastModified = file.lastModified();
+        long ageMs = System.currentTimeMillis() - lastModified;
+
+        // Format the date
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MMM d, yyyy h:mm a", java.util.Locale.getDefault());
+        String dateStr = sdf.format(new java.util.Date(lastModified));
+
+        // Format the age
+        String ageStr;
+        long minutes = ageMs / (1000 * 60);
+        long hours = minutes / 60;
+        long days = hours / 24;
+
+        if (days > 0) {
+            ageStr = days + (days == 1 ? " day" : " days") + " ago";
+        } else if (hours > 0) {
+            ageStr = hours + (hours == 1 ? " hour" : " hours") + " ago";
+        } else {
+            ageStr = minutes + (minutes == 1 ? " minute" : " minutes") + " ago";
+        }
+
+        textPlayerDataAge.setText("Last refresh: " + dateStr + " (" + ageStr + ")");
     }
     
     /**
@@ -607,6 +836,43 @@ public class ConfigFragment extends Fragment {
     }
     
     /**
+     * Refresh the SMS numbers list UI from the smsNumbers array.
+     */
+    private void refreshSmsNumbersList() {
+        layoutSmsNumbersList.removeAllViews();
+        for (int i = 0; i < smsNumbers.size(); i++) {
+            final int index = i;
+            String number = smsNumbers.get(i);
+            
+            android.widget.LinearLayout row = new android.widget.LinearLayout(getContext());
+            row.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+            row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            row.setPadding(0, 4, 0, 4);
+            
+            android.widget.TextView tv = new android.widget.TextView(getContext());
+            tv.setText("📱 " + number);
+            tv.setTextSize(14);
+            android.widget.LinearLayout.LayoutParams tvParams = new android.widget.LinearLayout.LayoutParams(
+                    0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+            tv.setLayoutParams(tvParams);
+            row.addView(tv);
+            
+            android.widget.TextView removeBtn = new android.widget.TextView(getContext());
+            removeBtn.setText("✕");
+            removeBtn.setTextSize(18);
+            removeBtn.setTextColor(0xFFD32F2F);
+            removeBtn.setPadding(24, 8, 24, 8);
+            removeBtn.setOnClickListener(v -> {
+                smsNumbers.remove(index);
+                refreshSmsNumbersList();
+            });
+            row.addView(removeBtn);
+            
+            layoutSmsNumbersList.addView(row);
+        }
+    }
+    
+    /**
      * Validate and save configuration.
      * Requirements: 3.5, 3.6, 3.7
      */
@@ -658,11 +924,27 @@ public class ConfigFragment extends Fragment {
         boolean wasSkipFirstRound = config.isSkipFirstRound();
         config.setSkipFirstRound(skipFirstRound);
         
+        // Update stopwatch enabled from checkbox
+        config.setStopwatchEnabled(checkboxStopwatchEnabled.isChecked());
+        
         // Update MainActivity's config
         mainActivity.setCurrentConfig(config);
         
         // Save state to persistence
         mainActivity.saveDraftState();
+        
+        // Save SMS settings to SharedPreferences
+        if (getContext() != null) {
+            StringBuilder numbersStr = new StringBuilder();
+            for (String num : smsNumbers) {
+                if (numbersStr.length() > 0) numbersStr.append("\n");
+                numbersStr.append(num);
+            }
+            getContext().getSharedPreferences("FantasyDraftPrefs", 0).edit()
+                    .putBoolean("sms_enabled", checkboxSmsEnabled.isChecked())
+                    .putString("sms_numbers", numbersStr.toString())
+                    .apply();
+        }
         
         // Show appropriate message based on whether keeper setting changed
         if (getContext() != null) {
@@ -753,6 +1035,11 @@ public class ConfigFragment extends Fragment {
         numberPickerRounds.setEnabled(!hasPicks);
         spinnerDraftFlow.setEnabled(!hasPicks);
         checkboxSkipFirstRound.setEnabled(!hasPicks);
+        
+        // Show/hide draft in progress banner
+        if (textDraftInProgressBanner != null) {
+            textDraftInProgressBanner.setVisibility(hasPicks ? View.VISIBLE : View.GONE);
+        }
         
         // Team names and league name remain editable
         // (inputLeagueName and RecyclerView items are always enabled)
