@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "fantasy_draft.db";
-    private static final int DATABASE_VERSION = 6; // Incremented for stopwatch_enabled column
+    private static final int DATABASE_VERSION = 7; // Incremented for position_requirements column
 
     // Table names
     public static final String TABLE_TEAMS = "teams";
@@ -58,6 +58,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_STATE_LEAGUE_NAME = "league_name";
     public static final String COLUMN_STATE_SKIP_FIRST_ROUND = "skip_first_round";
     public static final String COLUMN_STATE_STOPWATCH_ENABLED = "stopwatch_enabled";
+    public static final String COLUMN_STATE_POSITION_REQUIREMENTS = "position_requirements";
 
     // Create table statements
     private static final String CREATE_TABLE_SAVED_DRAFTS = 
@@ -115,7 +116,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         COLUMN_STATE_NUMBER_OF_ROUNDS + " INTEGER NOT NULL, " +
         COLUMN_STATE_LEAGUE_NAME + " TEXT NOT NULL DEFAULT 'My League', " +
         COLUMN_STATE_SKIP_FIRST_ROUND + " INTEGER NOT NULL DEFAULT 0, " +
-        COLUMN_STATE_STOPWATCH_ENABLED + " INTEGER NOT NULL DEFAULT 0" +
+        COLUMN_STATE_STOPWATCH_ENABLED + " INTEGER NOT NULL DEFAULT 0, " +
+        COLUMN_STATE_POSITION_REQUIREMENTS + " TEXT" +
         ");";
 
     // Create index statements for frequently queried columns
@@ -235,6 +237,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 // Add stopwatch_enabled column to draft_state table
                 db.execSQL("ALTER TABLE " + TABLE_DRAFT_STATE + " ADD COLUMN " + 
                           COLUMN_STATE_STOPWATCH_ENABLED + " INTEGER NOT NULL DEFAULT 0");
+            }
+            
+            if (oldVersion < 7) {
+                // Add position_requirements column to draft_state table
+                db.execSQL("ALTER TABLE " + TABLE_DRAFT_STATE + " ADD COLUMN " + 
+                          COLUMN_STATE_POSITION_REQUIREMENTS + " TEXT");
             }
         } catch (Exception e) {
             // If migration fails, drop all tables and recreate from scratch

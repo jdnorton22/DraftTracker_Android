@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="72dp"
+        android:paddingBottom="64dp"
+        android:clipToPadding="false">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Help &amp; Guide"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Getting Started -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🏈 Getting Started"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="1. Go to Config to set up your league name, team count, team names, and number of rounds.\n\n2. Choose your draft flow (Serpentine or Linear).\n\n3. Go to the Draft screen and tap 'Draft' to select a player, or tap 'Draft This Player' on the Best Available card.\n\n4. Use the position filters (QB, RB, WR, etc.) to browse best available by position.\n\n5. Mark players as favorites in the Favorites screen for quick access during the draft."
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary"
+                    android:lineSpacingExtra="2dp" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Draft Screen -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📋 Draft Screen"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Draft Info: Shows current round, pick number, and which team is on the clock. Tap to collapse/expand.\n\nBest Available: Shows the top-ranked undrafted player. Use position filters to view by position. The card shows the player's team, ADP, stats, and draft advisor recommendation.\n\nDraft Advisor: Analyzes roster needs, positional scarcity, ADP value, and stats to recommend picks. Look for:\n  💰 VALUE — great ADP value\n  🎯 NEED — fills a roster need\n  ⚡ SCARCITY — position running low\n  📋 BPA — best player available\n\nRecent Picks: Shows the last 3 picks with value indicators. 'View All' opens the full draft history. 'Analytics' appears after draft completion."
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary"
+                    android:lineSpacingExtra="2dp" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Pick Value Grading -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📊 Pick Value Grading"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Each pick is graded based on ADP (Average Draft Position) vs. actual pick number.\n\nValue Score = Pick Number - Player ADP\nPositive = good value (player fell to you)\nNegative = reach (drafted earlier than expected)"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary"
+                    android:lineSpacingExtra="2dp"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Pick Value Indicators:"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="★ Great Value — ADP difference +20 or more (Green)\n↑ Good Value — ADP difference +8 to +19 (Light Green)\n= Fair Value — ADP difference -8 to +7 (Gray)\n↓ Slight Reach — ADP difference -9 to -20 (Orange)\n⚠ Big Reach — ADP difference worse than -20 (Red)"
+                    android:textSize="13sp"
+                    android:textColor="@color/text_primary"
+                    android:lineSpacingExtra="4dp"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Player Selection Grades:"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="✓ Good Value (Green) — within 8 picks of ADP or better\n~ Slight Reach (Orange) — 9 to 20 picks ahead of ADP\n✗ Reach (Red) — more than 20 picks ahead of ADP"
+                    android:textSize="13sp"
+                    android:textColor="@color/text_primary"
+                    android:lineSpacingExtra="4dp" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Draft Grades -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🏆 Draft Grades (A+ to F)"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="After the draft completes, all teams are graded on a curve relative to each other. This ensures a proper distribution of grades across the league.\n\nGrade Scale:\nA+ (90-100) — Top 10%\nA/A- (80-89) — Top 25%\nB+/B/B- (70-79) — Above average\nC+/C/C- (60-69) — Average\nD (50-59) — Below average\nF (0-49) — Bottom 20%\n\nGrades are based on:\n• Value picks vs. reach picks\n• Average ADP difference\n• Roster balance (QB, RB, WR, TE)\n• Kickers and DST are excluded from grading\n\nTap 'Analytics' in the Recent Picks section after the draft to view grades for all teams."
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary"
+                    android:lineSpacingExtra="2dp" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Configuration -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⚙️ Configuration"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="League Name: Your league's display name.\n\nTeam Count: Number of teams (2-20). Changing this adds or removes teams.\n\nDraft Flow:\n• Serpentine — Draft order reverses each round (1-10, 10-1, 1-10...)\n• Linear — Same order every round (1-10, 1-10, 1-10...)\n\nKeeper League: Enable 'Force Linear Round 1' for keeper leagues where round 1 picks are predetermined.\n\nDraft Clock: Shows a stopwatch timer for each pick on the draft screen.\n\nRounds: Number of draft rounds (1-20).\n\nTeams: Edit team names and draft positions.\n\nPosition Requirements: Set min/max roster limits per position. 'None' means no maximum limit.\n\nSMS Updates: Send draft pick notifications to phone numbers via SMS.\n\nPlayer Data: Refresh rankings from ESPN or import custom player data."
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary"
+                    android:lineSpacingExtra="2dp" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Player Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="👤 Player Cards"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Tap any player in the draft selection screen to view their detail card.\n\nThe card shows:\n• Player name and position badge\n• NFL team, position rank, and bye week\n• ADP, position rank, and overall rank chips\n• Last year's stats\n• Injury status (color-coded)\n• Draft Advisor recommendation\n• 'View on ESPN' button — opens player profile\n• 'Depth Chart' button — opens team depth chart\n• Draft / Cancel buttons\n\nPlayers marked as favorites show a ⭐ star next to their name and are highlighted in the player list."
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary"
+                    android:lineSpacingExtra="2dp" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Team Roster -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="👥 Team Roster"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Tap the roster icon in the Draft Summary section to view any team's roster.\n\nThe roster dialog shows:\n• Team selector dropdown to switch between teams\n• Position requirements status:\n  ✓ Meets minimum\n  ❌ Below minimum\n  ⚠️ Exceeds maximum\n• All drafted players with pick details and ESPN links\n\nFormat: QB: 2/1+ means 2 drafted, minimum 1, no max limit."
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary"
+                    android:lineSpacingExtra="2dp" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Version Info -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Fantasy Draft Picker"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:gravity="center"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:id="@+id/text_help_version"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Version"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:gravity="center"
+            android:layout_marginBottom="16dp" />
+
+    </LinearLayout>
+
+</ScrollView>

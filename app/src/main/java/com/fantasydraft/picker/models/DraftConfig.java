@@ -11,25 +11,31 @@ public class DraftConfig implements Parcelable {
     private FlowType flowType;
     private int numberOfRounds;
     private String leagueName;
-    private boolean skipFirstRound; // For keeper leagues
+    private boolean skipFirstRound; // For keeper leagues (legacy, kept for Parcelable compat)
+    private int keeperLinearRounds; // Number of forced linear rounds for keeper leagues (0 = disabled)
     private boolean stopwatchEnabled; // Show pick timer on draft screen
+    private boolean sortByAdp; // Sort players by ADP instead of overall rank
     
     // Position roster requirements (min/max for each position)
     private Map<String, PositionRequirement> positionRequirements;
 
     public DraftConfig() {
-        this.leagueName = "My League"; // Default league name
+        this.leagueName = "My League";
         this.skipFirstRound = false;
+        this.keeperLinearRounds = 0;
         this.stopwatchEnabled = false;
+        this.sortByAdp = false;
         this.positionRequirements = getDefaultPositionRequirements();
     }
 
     public DraftConfig(FlowType flowType, int numberOfRounds) {
         this.flowType = flowType;
         this.numberOfRounds = numberOfRounds;
-        this.leagueName = "My League"; // Default league name
+        this.leagueName = "My League";
         this.skipFirstRound = false;
+        this.keeperLinearRounds = 0;
         this.stopwatchEnabled = false;
+        this.sortByAdp = false;
         this.positionRequirements = getDefaultPositionRequirements();
     }
 
@@ -38,7 +44,9 @@ public class DraftConfig implements Parcelable {
         this.numberOfRounds = numberOfRounds;
         this.leagueName = leagueName != null && !leagueName.trim().isEmpty() ? leagueName : "My League";
         this.skipFirstRound = false;
+        this.keeperLinearRounds = 0;
         this.stopwatchEnabled = false;
+        this.sortByAdp = false;
         this.positionRequirements = getDefaultPositionRequirements();
     }
 
@@ -47,7 +55,9 @@ public class DraftConfig implements Parcelable {
         this.numberOfRounds = numberOfRounds;
         this.leagueName = leagueName != null && !leagueName.trim().isEmpty() ? leagueName : "My League";
         this.skipFirstRound = skipFirstRound;
+        this.keeperLinearRounds = skipFirstRound ? 1 : 0;
         this.stopwatchEnabled = false;
+        this.sortByAdp = false;
         this.positionRequirements = getDefaultPositionRequirements();
     }
     
@@ -96,6 +106,21 @@ public class DraftConfig implements Parcelable {
 
     public void setSkipFirstRound(boolean skipFirstRound) {
         this.skipFirstRound = skipFirstRound;
+        // Sync with keeperLinearRounds for backward compat
+        if (skipFirstRound && this.keeperLinearRounds == 0) {
+            this.keeperLinearRounds = 1;
+        } else if (!skipFirstRound) {
+            this.keeperLinearRounds = 0;
+        }
+    }
+    
+    public int getKeeperLinearRounds() {
+        return keeperLinearRounds;
+    }
+    
+    public void setKeeperLinearRounds(int keeperLinearRounds) {
+        this.keeperLinearRounds = Math.max(0, keeperLinearRounds);
+        this.skipFirstRound = keeperLinearRounds > 0;
     }
 
     public boolean isStopwatchEnabled() {
@@ -104,6 +129,14 @@ public class DraftConfig implements Parcelable {
 
     public void setStopwatchEnabled(boolean stopwatchEnabled) {
         this.stopwatchEnabled = stopwatchEnabled;
+    }
+    
+    public boolean isSortByAdp() {
+        return sortByAdp;
+    }
+    
+    public void setSortByAdp(boolean sortByAdp) {
+        this.sortByAdp = sortByAdp;
     }
     
     public Map<String, PositionRequirement> getPositionRequirements() {
@@ -130,6 +163,7 @@ public class DraftConfig implements Parcelable {
         return numberOfRounds == that.numberOfRounds && 
                skipFirstRound == that.skipFirstRound &&
                stopwatchEnabled == that.stopwatchEnabled &&
+               sortByAdp == that.sortByAdp &&
                flowType == that.flowType &&
                Objects.equals(leagueName, that.leagueName) &&
                Objects.equals(positionRequirements, that.positionRequirements);
@@ -137,7 +171,7 @@ public class DraftConfig implements Parcelable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(flowType, numberOfRounds, leagueName, skipFirstRound, stopwatchEnabled, positionRequirements);
+        return Objects.hash(flowType, numberOfRounds, leagueName, skipFirstRound, stopwatchEnabled, sortByAdp, positionRequirements);
     }
     
     // Parcelable implementation
@@ -147,6 +181,7 @@ public class DraftConfig implements Parcelable {
         leagueName = in.readString();
         skipFirstRound = in.readByte() != 0;
         stopwatchEnabled = in.readByte() != 0;
+        sortByAdp = in.readByte() != 0;
         
         // Read position requirements
         int size = in.readInt();
@@ -183,6 +218,7 @@ public class DraftConfig implements Parcelable {
         dest.writeString(leagueName);
         dest.writeByte((byte) (skipFirstRound ? 1 : 0));
         dest.writeByte((byte) (stopwatchEnabled ? 1 : 0));
+        dest.writeByte((byte) (sortByAdp ? 1 : 0));
         
         // Write position requirements
         dest.writeInt(positionRequirements.size());

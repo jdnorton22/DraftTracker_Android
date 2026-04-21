@@ -37,14 +37,15 @@ public class DraftManager {
             throw new IllegalArgumentException("Invalid draft state");
         }
 
-        // If skipFirstRound is enabled and we're in round 1, always use linear
-        if (config.isSkipFirstRound() && currentRound == 1) {
+        // If keeper linear rounds are configured and we're in a linear round, always use linear
+        int keeperRounds = config.getKeeperLinearRounds();
+        if (keeperRounds > 0 && currentRound <= keeperRounds) {
             return currentPickInRound - 1;
         }
 
         if (config.getFlowType() == FlowType.SERPENTINE) {
-            // When skipFirstRound is enabled, treat round 2 as the first serpentine round (odd)
-            int effectiveRound = config.isSkipFirstRound() ? currentRound - 1 : currentRound;
+            // When keeper rounds are set, offset the serpentine so the first non-keeper round is treated as odd
+            int effectiveRound = keeperRounds > 0 ? currentRound - keeperRounds : currentRound;
             
             // Odd rounds: 1, 2, 3, ..., N (pickInRound - 1 gives 0-based index)
             // Even rounds: N, N-1, N-2, ..., 1 (teamCount - pickInRound gives 0-based index)
@@ -113,15 +114,16 @@ public class DraftManager {
         List<Integer> pickSequence = new ArrayList<>();
 
         for (int round = 1; round <= numberOfRounds; round++) {
-            // If skipFirstRound is enabled and we're in round 1, force linear
-            if (config.isSkipFirstRound() && round == 1) {
-                // Round 1 is always linear for keeper leagues
+            // If keeper linear rounds are configured and we're in a keeper round, force linear
+            int keeperRounds = config.getKeeperLinearRounds();
+            if (keeperRounds > 0 && round <= keeperRounds) {
+                // Keeper rounds are always linear
                 for (int i = 0; i < teamCount; i++) {
                     pickSequence.add(i);
                 }
             } else if (config.getFlowType() == FlowType.SERPENTINE) {
-                // When skipFirstRound is enabled, treat round 2 as the first serpentine round (odd)
-                int effectiveRound = config.isSkipFirstRound() ? round - 1 : round;
+                // Offset serpentine so first non-keeper round is treated as odd
+                int effectiveRound = keeperRounds > 0 ? round - keeperRounds : round;
                 
                 if (effectiveRound % 2 == 1) {
                     // Odd round: 0, 1, 2, ..., N-1

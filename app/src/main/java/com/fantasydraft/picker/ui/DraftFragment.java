@@ -72,6 +72,8 @@ public class DraftFragment extends Fragment {
     private TextView textBestPlayerPosition;
     private TextView textBestPlayerInjuryStatus;
     private TextView textBestPlayerStats;
+    private TextView textBestPlayerValue;
+    private TextView textDraftAdvisor;
     private LinearLayout layoutBestAvailableFilters;
     private String selectedPositionFilter = "Overall";
     private static final String[] POSITION_FILTER_OPTIONS = {"Overall", "Fav", "QB", "RB", "WR", "TE", "K", "DST"};
@@ -217,6 +219,8 @@ public class DraftFragment extends Fragment {
         textBestPlayerPosition = view.findViewById(R.id.text_best_player_position);
         textBestPlayerInjuryStatus = view.findViewById(R.id.text_best_player_injury_status);
         textBestPlayerStats = view.findViewById(R.id.text_best_player_stats);
+        textBestPlayerValue = view.findViewById(R.id.text_best_player_value);
+        textDraftAdvisor = view.findViewById(R.id.text_draft_advisor);
         
         // Position Filter Buttons
         layoutBestAvailableFilters = view.findViewById(R.id.layout_best_available_filters);
@@ -549,13 +553,11 @@ public class DraftFragment extends Fragment {
                 }
             }
             
-            // Show/hide roster button based on draft active state (Req 1.4)
+            // Show/hide team name based on draft active state (Req 1.4)
             boolean isDraftActive = !currentState.isComplete();
-            buttonViewRoster.setVisibility(isDraftActive ? View.VISIBLE : View.GONE);
             textCurrentTeam.setVisibility(isDraftActive ? View.VISIBLE : View.GONE);
         } else {
-            // Hide roster button and team when state is not available
-            buttonViewRoster.setVisibility(View.GONE);
+            // Hide team when state is not available
             textCurrentTeam.setVisibility(View.GONE);
         }
     }
@@ -571,17 +573,23 @@ public class DraftFragment extends Fragment {
         }
         
         PlayerManager playerManager = mainActivity.getPlayerManager();
+        DraftConfig cfg = mainActivity.getCurrentConfig();
+        boolean useAdp = cfg != null && cfg.isSortByAdp();
+        
         Player bestPlayer;
         if ("Overall".equals(selectedPositionFilter)) {
-            bestPlayer = playerManager.getBestAvailable(playerManager.getPlayers());
+            bestPlayer = useAdp ? playerManager.getBestAvailableByAdp(playerManager.getPlayers())
+                                : playerManager.getBestAvailable(playerManager.getPlayers());
         } else if ("Fav".equals(selectedPositionFilter)) {
-            bestPlayer = playerManager.getBestAvailableFavorite(playerManager.getPlayers());
+            bestPlayer = useAdp ? playerManager.getBestAvailableFavoriteByAdp(playerManager.getPlayers())
+                                : playerManager.getBestAvailableFavorite(playerManager.getPlayers());
         } else {
-            bestPlayer = playerManager.getBestAvailableByPosition(playerManager.getPlayers(), selectedPositionFilter);
+            bestPlayer = useAdp ? playerManager.getBestAvailableByPositionAdp(playerManager.getPlayers(), selectedPositionFilter)
+                                : playerManager.getBestAvailableByPosition(playerManager.getPlayers(), selectedPositionFilter);
         }
         
         if (bestPlayer != null) {
-            textBestPlayerName.setText(bestPlayer.getName());
+            textBestPlayerName.setText(bestPlayer.isFavorite() ? bestPlayer.getName() + " ⭐" : bestPlayer.getName());
 
             // Hyperlink player name to ESPN page in blue
             String espnUrl = bestPlayer.getEspnUrl();
@@ -598,8 +606,10 @@ public class DraftFragment extends Fragment {
             
             // Display team and position rank instead of position code and overall rank
             String positionInfo = "";
+            String teamAbbr = "";
             if (bestPlayer.getNflTeam() != null && !bestPlayer.getNflTeam().isEmpty()) {
-                positionInfo = bestPlayer.getNflTeam();
+                teamAbbr = bestPlayer.getNflTeam();
+                positionInfo = teamAbbr;
             }
             if (bestPlayer.getPositionRank() > 0) {
                 if (!positionInfo.isEmpty()) {
@@ -614,7 +624,32 @@ public class DraftFragment extends Fragment {
                 }
                 positionInfo += "(bye-" + bestPlayer.getByeWeek() + ")";
             }
-            textBestPlayerPosition.setText(positionInfo);
+            
+            // Make team abbreviation a clickable depth chart link
+            String depthChartUrl = bestPlayer.getEspnDepthChartUrl();
+            if (depthChartUrl != null && !teamAbbr.isEmpty()) {
+                android.text.SpannableString spannable = new android.text.SpannableString(positionInfo);
+                int teamStart = positionInfo.indexOf(teamAbbr);
+                if (teamStart >= 0) {
+                    spannable.setSpan(new android.text.style.ClickableSpan() {
+                        @Override
+                        public void onClick(@NonNull View widget) {
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(depthChartUrl));
+                            startActivity(browserIntent);
+                        }
+                        @Override
+                        public void updateDrawState(@NonNull android.text.TextPaint ds) {
+                            super.updateDrawState(ds);
+                            ds.setColor(0xFF1976D2); // Blue
+                            ds.setUnderlineText(true);
+                        }
+                    }, teamStart, teamStart + teamAbbr.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+                textBestPlayerPosition.setText(spannable);
+                textBestPlayerPosition.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
+            } else {
+                textBestPlayerPosition.setText(positionInfo);
+            }
             
             // Set position badge with color
             textBestPlayerPositionBadge.setText(bestPlayer.getPosition());
@@ -652,6 +687,104 @@ public class DraftFragment extends Fragment {
                 textBestPlayerStats.setVisibility(View.GONE);
             }
             
+            // Show projected pick value grade
+            if (bestPlayer.getPffRank() > 0) {
+                MainActivity ma = getMainActivity();
+                if (ma != null && ma.getCurrentState() != null && ma.getTeams() != null) {
+                    int pickNum = ((ma.getCurrentState().getCurrentRound() - 1) * ma.getTeams().size())
+                            + ma.getCurrentState().getCurrentPickInRound();
+                    int valueScore = pickNum - bestPlayer.getPffRank();
+                    
+                    String label;
+                    int color;
+                    
+                    // K and DST don't show reach unless drafted before round 10
+                    String pos = bestPlayer.getPosition();
+                    boolean isKDst = "K".equals(pos) || "DST".equals(pos) || "DEF".equals(pos);
+                    int currentRound = ma.getCurrentState().getCurrentRound();
+                    boolean suppressReach = isKDst && currentRound >= 10;
+                    
+                    // Check for elite player first
+                    if (PickValueCalculator.isElitePlayer(bestPlayer)) {
+                        label = "🏆 Elite " + pos + bestPlayer.getPositionRank();
+                        color = 0xFF6A1B9A; // Purple
+                    } else if (suppressReach || valueScore >= -8) {
+                        label = "Good Value";
+                        color = 0xFF4CAF50; // Green
+                    } else if (valueScore >= -20) {
+                        label = "Slight Reach";
+                        color = 0xFFFF9800; // Orange
+                    } else {
+                        label = "Reach";
+                        color = 0xFFF44336; // Red
+                    }
+                    
+                    String valueText = label + " (ADP " + bestPlayer.getPffRank() + ", " + 
+                            (valueScore >= 0 ? "+" : "") + valueScore + ")";
+                    textBestPlayerValue.setText(valueText);
+                    textBestPlayerValue.setTextColor(color);
+                    textBestPlayerValue.setVisibility(View.VISIBLE);
+                } else {
+                    textBestPlayerValue.setVisibility(View.GONE);
+                }
+            } else {
+                textBestPlayerValue.setVisibility(View.GONE);
+            }
+            
+            // Draft Advisor recommendation for the displayed best player
+            {
+                MainActivity ma = getMainActivity();
+                if (ma != null && ma.getCurrentState() != null && ma.getTeams() != null 
+                        && !ma.getTeams().isEmpty() && ma.getCurrentConfig() != null) {
+                    int pickNum = ((ma.getCurrentState().getCurrentRound() - 1) * ma.getTeams().size())
+                            + ma.getCurrentState().getCurrentPickInRound();
+                    int teamIdx = ma.getDraftManager().getCurrentTeamIndex(
+                            ma.getCurrentState(), ma.getCurrentConfig(), ma.getTeams().size());
+                    Team onClockTeam = (teamIdx >= 0 && teamIdx < ma.getTeams().size()) 
+                            ? ma.getTeams().get(teamIdx) : null;
+                    
+                    // Score this specific player using the full player pool for context
+                    com.fantasydraft.picker.utils.DraftAdvisor.Recommendation playerRec = 
+                        com.fantasydraft.picker.utils.DraftAdvisor.getRecommendationForPlayer(
+                            bestPlayer,
+                            ma.getPlayerManager().getPlayers(),
+                            onClockTeam,
+                            ma.getPickHistory(),
+                            ma.getTeams(),
+                            ma.getCurrentConfig(),
+                            pickNum);
+                    
+                    // Also check if this player is the #1 overall recommendation
+                    com.fantasydraft.picker.utils.DraftAdvisor.Recommendation topRec = 
+                        com.fantasydraft.picker.utils.DraftAdvisor.getRecommendation(
+                            ma.getPlayerManager().getPlayers(),
+                            onClockTeam,
+                            ma.getPickHistory(),
+                            ma.getTeams(),
+                            ma.getCurrentConfig(),
+                            pickNum);
+                    
+                    if (playerRec != null && playerRec.getReasoning() != null && !playerRec.getReasoning().isEmpty()) {
+                        String tagEmoji;
+                        switch (playerRec.getTag()) {
+                            case "VALUE": tagEmoji = "💰"; break;
+                            case "NEED": tagEmoji = "🎯"; break;
+                            case "SCARCITY": tagEmoji = "⚡"; break;
+                            default: tagEmoji = "📋"; break;
+                        }
+                        String advisorText = tagEmoji + " " + playerRec.getReasoning();
+                        if (topRec != null && topRec.getPlayer().getId().equals(bestPlayer.getId())) {
+                            advisorText += " · ⭐ #1 Pick";
+                        }
+                        textDraftAdvisor.setText(advisorText);
+                        textDraftAdvisor.setVisibility(View.VISIBLE);
+                    } else {
+                        textDraftAdvisor.setVisibility(View.GONE);
+                    }
+                } else {
+                    textDraftAdvisor.setVisibility(View.GONE);
+                }
+            }
             
             // Set position text to FFL position color
             int positionColor = PositionColors.getDarkColorForPosition(bestPlayer.getPosition());
@@ -714,6 +847,8 @@ public class DraftFragment extends Fragment {
             textBestPlayerPosition.setText("--");
             textBestPlayerInjuryStatus.setVisibility(View.GONE);
             textBestPlayerStats.setVisibility(View.GONE);
+            textBestPlayerValue.setVisibility(View.GONE);
+            textDraftAdvisor.setVisibility(View.GONE);
             
             // Reset position badge to default gray
             textBestPlayerPositionBadge.setText("--");
@@ -1356,10 +1491,34 @@ public class DraftFragment extends Fragment {
         PlayerManager playerManager = mainActivity.getPlayerManager();
         List<Player> availablePlayers = playerManager.getPlayers();
         
+        // Get draft context for advisor scores
+        DraftState currentState = mainActivity.getCurrentState();
+        DraftConfig currentConfig = mainActivity.getCurrentConfig();
+        List<Team> teams = mainActivity.getTeams();
+        List<Pick> picks = mainActivity.getPickHistory();
+        
+        Team onClockTeam = null;
+        int pickNum = 0;
+        if (currentState != null && teams != null && !teams.isEmpty() && currentConfig != null) {
+            pickNum = ((currentState.getCurrentRound() - 1) * teams.size())
+                    + currentState.getCurrentPickInRound();
+            int teamIdx = mainActivity.getDraftManager().getCurrentTeamIndex(
+                    currentState, currentConfig, teams.size());
+            if (teamIdx >= 0 && teamIdx < teams.size()) {
+                onClockTeam = teams.get(teamIdx);
+            }
+        }
+        
         PlayerSelectionDialog dialog = new PlayerSelectionDialog(
                 getActivity(),
                 availablePlayers,
-                this::handlePlayerSelection
+                this::handlePlayerSelection,
+                onClockTeam,
+                picks,
+                teams,
+                currentConfig,
+                pickNum,
+                currentState != null ? currentState.getCurrentRound() : 1
         );
         
         dialog.show();
@@ -1435,6 +1594,11 @@ public class DraftFragment extends Fragment {
             // Update UI
             updateUI();
             
+            // Light haptic feedback
+            if (getView() != null) {
+                getView().performHapticFeedback(android.view.HapticFeedbackConstants.CONFIRM);
+            }
+            
             // Restart stopwatch for next pick
             if (textStopwatch.getVisibility() == View.VISIBLE) {
                 startStopwatch();
@@ -1444,10 +1608,6 @@ public class DraftFragment extends Fragment {
             if (newState.isComplete()) {
                 showDraftCompletionDialog();
             }
-            
-            Toast.makeText(getContext(), 
-                    selectedPlayer.getName() + " drafted by " + currentTeam.getName(), 
-                    Toast.LENGTH_SHORT).show();
             
             // Send SMS update if enabled
             sendSmsDraftUpdate(selectedPlayer, currentTeam, currentState, overallPickNumber);
@@ -1517,13 +1677,19 @@ public class DraftFragment extends Fragment {
         }
         
         PlayerManager playerManager = mainActivity.getPlayerManager();
+        DraftConfig cfg2 = mainActivity.getCurrentConfig();
+        boolean useAdp2 = cfg2 != null && cfg2.isSortByAdp();
+        
         Player bestPlayer;
         if ("Overall".equals(selectedPositionFilter)) {
-            bestPlayer = playerManager.getBestAvailable(playerManager.getPlayers());
+            bestPlayer = useAdp2 ? playerManager.getBestAvailableByAdp(playerManager.getPlayers())
+                                 : playerManager.getBestAvailable(playerManager.getPlayers());
         } else if ("Fav".equals(selectedPositionFilter)) {
-            bestPlayer = playerManager.getBestAvailableFavorite(playerManager.getPlayers());
+            bestPlayer = useAdp2 ? playerManager.getBestAvailableFavoriteByAdp(playerManager.getPlayers())
+                                 : playerManager.getBestAvailableFavorite(playerManager.getPlayers());
         } else {
-            bestPlayer = playerManager.getBestAvailableByPosition(playerManager.getPlayers(), selectedPositionFilter);
+            bestPlayer = useAdp2 ? playerManager.getBestAvailableByPositionAdp(playerManager.getPlayers(), selectedPositionFilter)
+                                 : playerManager.getBestAvailableByPosition(playerManager.getPlayers(), selectedPositionFilter);
         }
         
         if (bestPlayer == null) {
@@ -1728,7 +1894,8 @@ public class DraftFragment extends Fragment {
         
         // Show analytics dialog with all teams
         DraftAnalyticsDialog analyticsDialog = new DraftAnalyticsDialog(
-                getActivity(), allAnalytics, userTeam.getId());
+                getActivity(), allAnalytics, userTeam.getId(),
+                teams, draftManager, playerManager, currentConfig);
         analyticsDialog.show();
     }
     

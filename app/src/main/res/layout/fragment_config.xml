@@ -83,37 +83,78 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Team Count Section -->
+        <!-- Teams Section - Clickable to open dialog -->
         <androidx.cardview.widget.CardView
+            android:id="@+id/card_teams_settings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="8dp"
-            app:cardElevation="4dp">
+            app:cardElevation="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Teams"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/text_teams_summary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="10 teams"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginTop="2dp" />
+
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/number_of_teams"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <NumberPicker
-                    android:id="@+id/number_picker_team_count"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal" />
+                    android:text="›"
+                    android:textSize="24sp"
+                    android:textColor="@color/text_secondary" />
 
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
+
+        <!-- Hidden team controls (used by dialog) -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone">
+
+            <NumberPicker
+                android:id="@+id/number_picker_team_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_teams"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
 
         <!-- Draft Flow Section -->
         <androidx.cardview.widget.CardView
@@ -167,14 +208,42 @@
                     android:text="Keeper League Settings"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="4dp" />
 
-                <CheckBox
-                    android:id="@+id/checkbox_skip_first_round"
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Force Linear Round 1 (for keeper leagues)"
-                    android:minHeight="48dp" />
+                    android:text="Force linear draft order for keeper rounds (0 = disabled)"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Linear Rounds:"
+                        android:textSize="14sp"
+                        android:layout_marginEnd="12dp" />
+
+                    <NumberPicker
+                        android:id="@+id/number_picker_keeper_rounds"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <!-- Hidden legacy checkbox for backward compat -->
+                <CheckBox
+                    android:id="@+id/checkbox_skip_first_round"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
 
             </LinearLayout>
 
@@ -213,6 +282,38 @@
 
         </androidx.cardview.widget.CardView>
 
+        <!-- Player Sort Order -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Player Sort Order"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <Spinner
+                    android:id="@+id/spinner_sort_order"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
         <!-- Number of Rounds Section -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
@@ -245,166 +346,153 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Team List Section -->
+        <!-- SMS Draft Updates Section - Clickable to open dialog -->
         <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="4dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/teams"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recycler_teams"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
-                    android:minHeight="200dp" />
-
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <!-- SMS Draft Updates Section -->
-        <androidx.cardview.widget.CardView
+            android:id="@+id/card_sms_settings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="8dp"
-            app:cardElevation="4dp">
+            app:cardElevation="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SMS Draft Updates"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/text_sms_summary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Disabled"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginTop="2dp" />
+
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="SMS Draft Updates"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="4dp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Add phone numbers to receive draft pick updates via SMS."
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginBottom="8dp" />
-
-                <CheckBox
-                    android:id="@+id/checkbox_sms_enabled"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Enable SMS updates after each pick"
-                    android:minHeight="48dp" />
-
-                <!-- Add number row -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginTop="4dp">
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:hint="Phone number">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/input_sms_new_number"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/text_primary"
-                            android:inputType="phone"
-                            android:maxLines="1" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <Button
-                        android:id="@+id/button_add_sms_number"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Add"
-                        android:textSize="13sp"
-                        android:textAllCaps="false"
-                        android:layout_marginStart="8dp"
-                        android:minWidth="64dp" />
-
-                </LinearLayout>
-
-                <!-- List of added numbers -->
-                <LinearLayout
-                    android:id="@+id/layout_sms_numbers_list"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="8dp" />
+                    android:text="›"
+                    android:textSize="24sp"
+                    android:textColor="@color/text_secondary" />
 
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Position Requirements Section -->
+        <!-- Hidden SMS fields (used by dialog) -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone">
+
+            <CheckBox
+                android:id="@+id/checkbox_sms_enabled"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/input_sms_new_number"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <Button
+                android:id="@+id/button_add_sms_number"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <LinearLayout
+                android:id="@+id/layout_sms_numbers_list"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+        </LinearLayout>
+
+        <!-- Position Requirements Section - Clickable to open dialog -->
         <androidx.cardview.widget.CardView
+            android:id="@+id/card_position_requirements"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="8dp"
-            app:cardElevation="4dp">
+            app:cardElevation="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Position Roster Requirements"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/text_position_req_summary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="QB 1+, RB 2+, WR 2+, TE 1+, K 1+, DST 1+"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginTop="2dp" />
+
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Position Roster Requirements"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="4dp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Set minimum and maximum players per position"
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginBottom="12dp" />
-
-                <!-- Position Requirements List -->
-                <LinearLayout
-                    android:id="@+id/layout_position_requirements"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical" />
+                    android:text="›"
+                    android:textSize="24sp"
+                    android:textColor="@color/text_secondary" />
 
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
+
+        <!-- Hidden position requirements container (used by dialog) -->
+        <LinearLayout
+            android:id="@+id/layout_position_requirements"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:orientation="vertical"
+            android:visibility="gone" />
 
         <!-- Save Button -->
         <Button
@@ -415,129 +503,79 @@
             android:textSize="16sp"
             android:padding="16dp" />
 
-        <!-- Refresh Player Data Section -->
+        <!-- Player Data Section - Clickable to open dialog -->
         <androidx.cardview.widget.CardView
+            android:id="@+id/card_player_data"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"
             app:cardCornerRadius="8dp"
-            app:cardElevation="4dp">
+            app:cardElevation="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Player Data"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/text_player_data_age"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Bundled default"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginTop="2dp" />
+
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Refresh Player Data"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="⚠️ Player data is updated monthly. This will download the latest available rankings and reset your current draft."
-                    android:textSize="13sp"
-                    android:layout_marginBottom="12dp" />
-
-                <Button
-                    android:id="@+id/button_refresh_player_data"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Refresh Player Data"
-                    android:textSize="14sp"
-                    style="?attr/materialButtonOutlinedStyle" />
-
-                <TextView
-                    android:id="@+id/text_player_data_age"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginTop="6dp"
-                    android:gravity="center" />
+                    android:text="›"
+                    android:textSize="24sp"
+                    android:textColor="@color/text_secondary" />
 
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Import Players Section -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="8dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="4dp">
+        <!-- Hidden player data buttons (used by dialog) -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+            <Button
+                android:id="@+id/button_refresh_player_data"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Import Custom Player Data"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
+            <Button
+                android:id="@+id/button_import_players"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Upload a custom players.json file to use your own player rankings and data."
-                    android:textColor="@color/text_secondary"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="12dp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="File Format Requirements:"
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="4dp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="• JSON array format\n• Minimum 10 players\n• Required fields: id, name, position, rank\n• Optional: pffRank, positionRank, nflTeam, lastYearStats, injuryStatus, espnId, byeWeek"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
-                    android:lineSpacingExtra="2dp"
-                    android:layout_marginBottom="12dp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Example:\n[{\n  &quot;id&quot;: 10000,\n  &quot;name&quot;: &quot;Christian McCaffrey&quot;,\n  &quot;position&quot;: &quot;RB&quot;,\n  &quot;nflTeam&quot;: &quot;SF&quot;,\n  &quot;rank&quot;: 1,\n  &quot;pffRank&quot;: 1,\n  &quot;positionRank&quot;: 1,\n  &quot;lastYearStats&quot;: &quot;202 rush yds, 0 rush TDs, 15 rec, 146 rec yds&quot;,\n  &quot;injuryStatus&quot;: &quot;QUESTIONABLE&quot;,\n  &quot;espnId&quot;: &quot;3117251&quot;,\n  &quot;byeWeek&quot;: 7\n}]"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="11sp"
-                    android:fontFamily="monospace"
-                    android:background="@color/code_block_background"
-                    android:padding="8dp"
-                    android:layout_marginBottom="12dp" />
-
-                <Button
-                    android:id="@+id/button_import_players"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Import Players"
-                    android:textSize="14sp"
-                    style="?attr/materialButtonOutlinedStyle" />
-
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
+        </LinearLayout>
 
     </LinearLayout>
 

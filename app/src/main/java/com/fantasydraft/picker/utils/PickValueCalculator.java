@@ -12,9 +12,9 @@ public class PickValueCalculator {
     
     // Value tier thresholds
     public static final int GREAT_VALUE_THRESHOLD = 20;
-    public static final int GOOD_VALUE_THRESHOLD = 10;
-    public static final int FAIR_VALUE_THRESHOLD = 9;
-    public static final int SLIGHT_REACH_THRESHOLD = -10;
+    public static final int GOOD_VALUE_THRESHOLD = 8;
+    public static final int FAIR_VALUE_THRESHOLD = 8;
+    public static final int SLIGHT_REACH_THRESHOLD = -9;
     public static final int BIG_REACH_THRESHOLD = -20;
     
     /**
@@ -30,8 +30,32 @@ public class PickValueCalculator {
         return pick.getPickNumber() - player.getPffRank();
     }
     
+    // Elite player threshold (top N at their position)
+    public static final int ELITE_POSITION_RANK_THRESHOLD = 5;
+    
     /**
-     * Get the value tier for a pick.
+     * Check if a player is considered elite (top 5 at their position).
+     */
+    public static boolean isElitePlayer(Player player) {
+        return player != null && player.getPositionRank() > 0 
+                && player.getPositionRank() <= ELITE_POSITION_RANK_THRESHOLD;
+    }
+    
+    /**
+     * Get the value tier for a pick, factoring in elite status.
+     * @param valueScore The calculated value score
+     * @param player The player (for elite check)
+     * @return ValueTier enum
+     */
+    public static ValueTier getValueTier(int valueScore, Player player) {
+        if (isElitePlayer(player)) {
+            return ValueTier.ELITE;
+        }
+        return getValueTier(valueScore);
+    }
+    
+    /**
+     * Get the value tier for a pick (without elite check).
      * @param valueScore The calculated value score
      * @return ValueTier enum
      */
@@ -56,6 +80,8 @@ public class PickValueCalculator {
      */
     public static String getValueIcon(ValueTier tier) {
         switch (tier) {
+            case ELITE:
+                return "🏆";
             case GREAT_VALUE:
                 return "★";
             case GOOD_VALUE:
@@ -78,6 +104,8 @@ public class PickValueCalculator {
      */
     public static int getValueColor(ValueTier tier) {
         switch (tier) {
+            case ELITE:
+                return 0xFF6A1B9A; // Purple
             case GREAT_VALUE:
                 return 0xFF4CAF50; // Green
             case GOOD_VALUE:
@@ -115,6 +143,8 @@ public class PickValueCalculator {
      */
     public static String getValueDescription(ValueTier tier) {
         switch (tier) {
+            case ELITE:
+                return "Elite";
             case GREAT_VALUE:
                 return "Great Value";
             case GOOD_VALUE:
@@ -134,6 +164,7 @@ public class PickValueCalculator {
      * Enum representing value tiers.
      */
     public enum ValueTier {
+        ELITE,
         GREAT_VALUE,
         GOOD_VALUE,
         FAIR_VALUE,

@@ -124,6 +124,11 @@ public class DraftAnalyzer {
             String position = player.getPosition();
             positionCounts.put(position, positionCounts.getOrDefault(position, 0) + 1);
             
+            // Skip K and DST from value grading (ADP unreliable for these positions)
+            if ("K".equals(position) || "DST".equals(position) || "DEF".equals(position)) {
+                continue;
+            }
+            
             // Calculate value score using PickValueCalculator
             int valueScore = PickValueCalculator.calculateValueScore(pick, player);
             if (valueScore != 0) {
@@ -148,12 +153,24 @@ public class DraftAnalyzer {
         analytics.setPositionCounts(positionCounts);
         analytics.setValuePicks(valuePicks);
         analytics.setReachPicks(reachPicks);
-        analytics.setAverageAdpDifference(totalAdpDiff / teamPicks.size());
+        
+        // Count graded picks (excluding K and DST)
+        int gradedPicks = 0;
+        for (Pick pick : teamPicks) {
+            Player p = playerManager.getPlayerById(pick.getPlayerId());
+            if (p != null) {
+                String pos = p.getPosition();
+                if (!"K".equals(pos) && !"DST".equals(pos) && !"DEF".equals(pos)) {
+                    gradedPicks++;
+                }
+            }
+        }
+        analytics.setAverageAdpDifference(gradedPicks > 0 ? totalAdpDiff / gradedPicks : 0);
         analytics.setBestPick(bestPickName);
         analytics.setWorstPick(worstPickName);
         
-        // Calculate overall grade
-        double grade = calculateGrade(teamPicks, positionCounts, valuePicks, reachPicks, totalAdpDiff);
+        // Calculate overall grade (using graded picks count)
+        double grade = calculateGrade(gradedPicks, positionCounts, valuePicks, reachPicks, totalAdpDiff);
         analytics.setOverallGrade(grade);
         
         // Determine draft strategy
@@ -168,9 +185,10 @@ public class DraftAnalyzer {
     }
     
     /**
-     * Calculate overall draft grade (0-100)
+     * Calculate overall draft grade (0-100).
+     * Only considers QB, RB, WR, TE picks (excludes K and DST).
      */
-    private static double calculateGrade(List<Pick> picks, Map<String, Integer> positionCounts, 
+    private static double calculateGrade(int gradedPicks, Map<String, Integer> positionCounts, 
                                         int valuePicks, int reachPicks, double totalAdpDiff) {
         double grade = 70.0; // Base grade
         
@@ -181,8 +199,10 @@ public class DraftAnalyzer {
         grade -= reachPicks * 1.5;
         
         // Bonus for positive average ADP difference
-        double avgAdpDiff = totalAdpDiff / picks.size();
-        grade += avgAdpDiff * 0.5;
+        if (gradedPicks > 0) {
+            double avgAdpDiff = totalAdpDiff / gradedPicks;
+            grade += avgAdpDiff * 0.5;
+        }
         
         // Bonus for balanced roster
         int qb = positionCounts.getOrDefault("QB", 0);

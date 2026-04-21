@@ -36,6 +36,12 @@ public class DraftAnalyticsDialog extends Dialog {
     private DraftAnalytics currentAnalytics;
     private Context context;
     
+    // Roster dialog dependencies
+    private java.util.List<com.fantasydraft.picker.models.Team> teams;
+    private com.fantasydraft.picker.managers.DraftManager draftManager;
+    private com.fantasydraft.picker.managers.PlayerManager playerManager;
+    private com.fantasydraft.picker.models.DraftConfig draftConfig;
+    
     // UI Components
     private Spinner spinnerTeamSelector;
     private TextView textTeamName;
@@ -54,9 +60,21 @@ public class DraftAnalyticsDialog extends Dialog {
     private ImageButton buttonCloseAnalytics;
     
     public DraftAnalyticsDialog(@NonNull Context context, List<DraftAnalytics> allAnalytics, String defaultTeamId) {
+        this(context, allAnalytics, defaultTeamId, null, null, null, null);
+    }
+    
+    public DraftAnalyticsDialog(@NonNull Context context, List<DraftAnalytics> allAnalytics, String defaultTeamId,
+                                 java.util.List<com.fantasydraft.picker.models.Team> teams,
+                                 com.fantasydraft.picker.managers.DraftManager draftManager,
+                                 com.fantasydraft.picker.managers.PlayerManager playerManager,
+                                 com.fantasydraft.picker.models.DraftConfig draftConfig) {
         super(context);
         this.context = context;
         this.allAnalytics = allAnalytics;
+        this.teams = teams;
+        this.draftManager = draftManager;
+        this.playerManager = playerManager;
+        this.draftConfig = draftConfig;
         
         // Find the default team's analytics
         for (DraftAnalytics analytics : allAnalytics) {
@@ -248,6 +266,23 @@ public class DraftAnalyticsDialog extends Dialog {
             row.addView(badge);
             row.addView(countText);
             layoutPositionDistribution.addView(row);
+        }
+        
+        // Add "View Roster" link
+        if (teams != null && draftManager != null && playerManager != null) {
+            TextView viewRosterLink = new TextView(context);
+            viewRosterLink.setText("View Full Roster →");
+            viewRosterLink.setTextSize(14);
+            viewRosterLink.setTextColor(Color.parseColor("#1976D2"));
+            viewRosterLink.setTypeface(null, android.graphics.Typeface.BOLD);
+            viewRosterLink.setPadding(0, (int) (12 * context.getResources().getDisplayMetrics().density), 0, 0);
+            viewRosterLink.setOnClickListener(v -> {
+                String teamId = currentAnalytics.getTeamId();
+                TeamRosterDialog rosterDialog = new TeamRosterDialog(
+                        context, teams, teamId, draftManager, playerManager, draftConfig);
+                rosterDialog.show();
+            });
+            layoutPositionDistribution.addView(viewRosterLink);
         }
     }
     

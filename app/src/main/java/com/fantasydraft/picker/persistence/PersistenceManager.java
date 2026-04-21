@@ -168,6 +168,32 @@ public class PersistenceManager {
                     draftState = new DraftState(currentRound, currentPickInRound, isComplete);
                     draftConfig = new DraftConfig(FlowType.valueOf(flowTypeStr), numberOfRounds, leagueName, skipFirstRound);
                     draftConfig.setStopwatchEnabled(stopwatchEnabled);
+                    
+                    // Load position requirements
+                    int posReqIndex = cursor.getColumnIndex(DatabaseHelper.COLUMN_STATE_POSITION_REQUIREMENTS);
+                    if (posReqIndex >= 0) {
+                        String posReqStr = cursor.getString(posReqIndex);
+                        if (posReqStr != null && !posReqStr.isEmpty()) {
+                            try {
+                                org.json.JSONObject posReqsJson = new org.json.JSONObject(posReqStr);
+                                
+                                // Load sort preference
+                                if (posReqsJson.has("_sortByAdp")) {
+                                    draftConfig.setSortByAdp(posReqsJson.getInt("_sortByAdp") == 1);
+                                }
+                                
+                                java.util.Iterator<String> keys = posReqsJson.keys();
+                                while (keys.hasNext()) {
+                                    String pos = keys.next();
+                                    if (pos.startsWith("_")) continue; // Skip metadata keys
+                                    org.json.JSONObject req = posReqsJson.getJSONObject(pos);
+                                    draftConfig.setPositionRequirement(pos, req.getInt("min"), req.getInt("max"));
+                                }
+                            } catch (org.json.JSONException e) {
+                                // Use defaults if parse fails
+                            }
+                        }
+                    }
                 } catch (IllegalArgumentException e) {
                     cursor.close();
                     throw new PersistenceException("Draft data is corrupted", 
@@ -238,6 +264,24 @@ public class PersistenceManager {
         values.put(DatabaseHelper.COLUMN_STATE_LEAGUE_NAME, draftConfig.getLeagueName());
         values.put(DatabaseHelper.COLUMN_STATE_SKIP_FIRST_ROUND, draftConfig.isSkipFirstRound() ? 1 : 0);
         values.put(DatabaseHelper.COLUMN_STATE_STOPWATCH_ENABLED, draftConfig.isStopwatchEnabled() ? 1 : 0);
+        
+        // Serialize position requirements as JSON
+        try {
+            org.json.JSONObject posReqsJson = new org.json.JSONObject();
+            posReqsJson.put("_sortByAdp", draftConfig.isSortByAdp() ? 1 : 0);
+            java.util.Map<String, DraftConfig.PositionRequirement> reqs = draftConfig.getPositionRequirements();
+            if (reqs != null) {
+                for (java.util.Map.Entry<String, DraftConfig.PositionRequirement> entry : reqs.entrySet()) {
+                    org.json.JSONObject req = new org.json.JSONObject();
+                    req.put("min", entry.getValue().getMin());
+                    req.put("max", entry.getValue().getMax());
+                    posReqsJson.put(entry.getKey(), req);
+                }
+            }
+            values.put(DatabaseHelper.COLUMN_STATE_POSITION_REQUIREMENTS, posReqsJson.toString());
+        } catch (org.json.JSONException e) {
+            // Ignore serialization errors
+        }
 
         db.insert(DatabaseHelper.TABLE_DRAFT_STATE, null, values);
     }

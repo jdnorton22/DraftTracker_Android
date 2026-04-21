@@ -51,7 +51,9 @@ public class ConfigFragment extends Fragment {
     private NumberPicker numberPickerRounds;
     private Spinner spinnerDraftFlow;
     private CheckBox checkboxSkipFirstRound;
+    private NumberPicker numberPickerKeeperRounds;
     private CheckBox checkboxStopwatchEnabled;
+    private Spinner spinnerSortOrder;
     private CheckBox checkboxSmsEnabled;
     private com.google.android.material.textfield.TextInputEditText inputSmsNewNumber;
     private android.widget.LinearLayout layoutSmsNumbersList;
@@ -83,6 +85,7 @@ public class ConfigFragment extends Fragment {
         setupNumberPicker();
         setupRoundsPicker();
         setupSpinner();
+        setupSortOrderSpinner();
         setupRecyclerView();
         setupSaveButton();
         setupImportButton();
@@ -152,9 +155,14 @@ public class ConfigFragment extends Fragment {
                 spinnerDraftFlow.setSelection(selection);
             }
             
-            // Set skip first round checkbox
+            // Set skip first round checkbox (legacy)
             if (checkboxSkipFirstRound != null) {
                 checkboxSkipFirstRound.setChecked(config.isSkipFirstRound());
+            }
+            
+            // Set keeper linear rounds
+            if (numberPickerKeeperRounds != null) {
+                numberPickerKeeperRounds.setValue(config.getKeeperLinearRounds());
             }
             
             // Set stopwatch enabled checkbox
@@ -178,7 +186,11 @@ public class ConfigFragment extends Fragment {
                 }
             }
             refreshSmsNumbersList();
+            updateSmsSummary();
         }
+        
+        // Update position requirements summary
+        updatePositionReqSummary();
         
         // Load teams
         List<Team> teams = mainActivity.getTeams();
@@ -193,6 +205,9 @@ public class ConfigFragment extends Fragment {
                 teamAdapter.setTeams(teams);
             }
         }
+        
+        // Update teams summary
+        updateTeamsSummary();
     }
     
     /**
@@ -205,7 +220,14 @@ public class ConfigFragment extends Fragment {
         numberPickerRounds = view.findViewById(R.id.number_picker_rounds);
         spinnerDraftFlow = view.findViewById(R.id.spinner_draft_flow);
         checkboxSkipFirstRound = view.findViewById(R.id.checkbox_skip_first_round);
+        numberPickerKeeperRounds = view.findViewById(R.id.number_picker_keeper_rounds);
+        if (numberPickerKeeperRounds != null) {
+            numberPickerKeeperRounds.setMinValue(0);
+            numberPickerKeeperRounds.setMaxValue(10);
+            numberPickerKeeperRounds.setWrapSelectorWheel(false);
+        }
         checkboxStopwatchEnabled = view.findViewById(R.id.checkbox_stopwatch_enabled);
+        spinnerSortOrder = view.findViewById(R.id.spinner_sort_order);
         checkboxSmsEnabled = view.findViewById(R.id.checkbox_sms_enabled);
         inputSmsNewNumber = view.findViewById(R.id.input_sms_new_number);
         layoutSmsNumbersList = view.findViewById(R.id.layout_sms_numbers_list);
@@ -229,6 +251,27 @@ public class ConfigFragment extends Fragment {
         LinearLayout layoutPositionRequirements = view.findViewById(R.id.layout_position_requirements);
         if (layoutPositionRequirements != null) {
             populatePositionRequirements(layoutPositionRequirements);
+        }
+        
+        // Sub-page card click handlers
+        View cardSmsSettings = view.findViewById(R.id.card_sms_settings);
+        if (cardSmsSettings != null) {
+            cardSmsSettings.setOnClickListener(v -> showSmsSettingsDialog());
+        }
+        
+        View cardTeamsSettings = view.findViewById(R.id.card_teams_settings);
+        if (cardTeamsSettings != null) {
+            cardTeamsSettings.setOnClickListener(v -> showTeamsSettingsDialog());
+        }
+        
+        View cardPositionReq = view.findViewById(R.id.card_position_requirements);
+        if (cardPositionReq != null) {
+            cardPositionReq.setOnClickListener(v -> showPositionRequirementsDialog());
+        }
+        
+        View cardPlayerData = view.findViewById(R.id.card_player_data);
+        if (cardPlayerData != null) {
+            cardPlayerData.setOnClickListener(v -> showPlayerDataDialog());
         }
     }
     
@@ -285,6 +328,28 @@ public class ConfigFragment extends Fragment {
             DraftConfig config = mainActivity.getCurrentConfig();
             if (config != null) {
                 numberPickerRounds.setValue(config.getNumberOfRounds());
+            }
+        }
+    }
+    
+    /**
+     * Set up the sort order spinner.
+     */
+    private void setupSortOrderSpinner() {
+        if (getContext() == null || spinnerSortOrder == null) return;
+        
+        String[] sortOptions = {"Overall Rank", "ADP (Average Draft Position)"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                getContext(), android.R.layout.simple_spinner_item, sortOptions);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerSortOrder.setAdapter(adapter);
+        
+        // Set current selection
+        MainActivity mainActivity = getMainActivity();
+        if (mainActivity != null) {
+            DraftConfig config = mainActivity.getCurrentConfig();
+            if (config != null && config.isSortByAdp()) {
+                spinnerSortOrder.setSelection(1);
             }
         }
     }
@@ -425,6 +490,459 @@ public class ConfigFragment extends Fragment {
         } else {
             textView.setText(String.valueOf(maxValue));
         }
+    }
+    
+    /**
+     * Show teams settings dialog with team count and team names.
+     */
+    private void showTeamsSettingsDialog() {
+        MainActivity mainActivity = getMainActivity();
+        if (mainActivity == null || getContext() == null) return;
+        
+        List<Team> teams = mainActivity.getTeams();
+        if (teams == null) teams = new ArrayList<>();
+        
+        // Check if draft is in progress
+        List<com.fantasydraft.picker.models.Pick> pickHistory = mainActivity.getPickHistory();
+        boolean hasPicks = pickHistory != null && !pickHistory.isEmpty();
+        
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getContext());
+        builder.setTitle("Teams");
+        
+        android.widget.ScrollView scrollView = new android.widget.ScrollView(getContext());
+        android.widget.LinearLayout layout = new android.widget.LinearLayout(getContext());
+        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+        float density = getResources().getDisplayMetrics().density;
+        int pad = (int) (16 * density);
+        layout.setPadding(pad, pad, pad, pad);
+        scrollView.addView(layout);
+        
+        // Team count label
+        android.widget.TextView countLabel = new android.widget.TextView(getContext());
+        countLabel.setText("Number of Teams");
+        countLabel.setTextSize(16);
+        countLabel.setTypeface(null, android.graphics.Typeface.BOLD);
+        android.widget.LinearLayout.LayoutParams labelParams = new android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+        labelParams.bottomMargin = (int) (8 * density);
+        countLabel.setLayoutParams(labelParams);
+        layout.addView(countLabel);
+        
+        // Draft in progress warning
+        if (hasPicks) {
+            android.widget.TextView lockWarning = new android.widget.TextView(getContext());
+            lockWarning.setText("⚠ Team count is locked while draft is in progress.");
+            lockWarning.setTextSize(13);
+            lockWarning.setTextColor(0xFFFF8C00);
+            android.widget.LinearLayout.LayoutParams warnParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+            warnParams.bottomMargin = (int) (8 * density);
+            lockWarning.setLayoutParams(warnParams);
+            layout.addView(lockWarning);
+        }
+        
+        // Team count picker
+        NumberPicker countPicker = new NumberPicker(getContext());
+        countPicker.setMinValue(MIN_TEAMS);
+        countPicker.setMaxValue(MAX_TEAMS);
+        countPicker.setWrapSelectorWheel(false);
+        countPicker.setValue(teams.size());
+        countPicker.setEnabled(!hasPicks);
+        countPicker.setAlpha(hasPicks ? 0.5f : 1.0f);
+        android.widget.LinearLayout.LayoutParams pickerParams = new android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+        pickerParams.gravity = android.view.Gravity.CENTER_HORIZONTAL;
+        pickerParams.bottomMargin = (int) (16 * density);
+        countPicker.setLayoutParams(pickerParams);
+        layout.addView(countPicker);
+        
+        // Divider
+        android.view.View divider = new android.view.View(getContext());
+        divider.setBackgroundColor(0xFFE0E0E0);
+        android.widget.LinearLayout.LayoutParams divParams = new android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT, (int) (1 * density));
+        divParams.bottomMargin = (int) (12 * density);
+        divider.setLayoutParams(divParams);
+        layout.addView(divider);
+        
+        // Team names label
+        android.widget.TextView namesLabel = new android.widget.TextView(getContext());
+        namesLabel.setText("Team Names");
+        namesLabel.setTextSize(16);
+        namesLabel.setTypeface(null, android.graphics.Typeface.BOLD);
+        android.widget.LinearLayout.LayoutParams namesLabelParams = new android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+        namesLabelParams.bottomMargin = (int) (8 * density);
+        namesLabel.setLayoutParams(namesLabelParams);
+        layout.addView(namesLabel);
+        
+        // Team name edit fields container
+        android.widget.LinearLayout teamFieldsContainer = new android.widget.LinearLayout(getContext());
+        teamFieldsContainer.setOrientation(android.widget.LinearLayout.VERTICAL);
+        layout.addView(teamFieldsContainer);
+        
+        // Track edit texts
+        List<android.widget.EditText> teamNameFields = new ArrayList<>();
+        
+        // Populate team fields
+        Runnable refreshTeamFields = new Runnable() {
+            @Override
+            public void run() {
+                teamFieldsContainer.removeAllViews();
+                teamNameFields.clear();
+                
+                List<Team> currentTeams = mainActivity.getTeams();
+                if (currentTeams == null) return;
+                
+                for (int i = 0; i < currentTeams.size(); i++) {
+                    Team team = currentTeams.get(i);
+                    android.widget.LinearLayout row = new android.widget.LinearLayout(getContext());
+                    row.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+                    row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+                    android.widget.LinearLayout.LayoutParams rowParams = new android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+                    rowParams.bottomMargin = (int) (4 * density);
+                    row.setLayoutParams(rowParams);
+                    
+                    android.widget.TextView posText = new android.widget.TextView(getContext());
+                    posText.setText(String.valueOf(team.getDraftPosition()) + ".");
+                    posText.setTextSize(14);
+                    posText.setTypeface(null, android.graphics.Typeface.BOLD);
+                    android.widget.LinearLayout.LayoutParams posParams = new android.widget.LinearLayout.LayoutParams(
+                        (int) (32 * density), android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+                    posText.setLayoutParams(posParams);
+                    row.addView(posText);
+                    
+                    android.widget.EditText nameField = new android.widget.EditText(getContext());
+                    nameField.setText(team.getName());
+                    nameField.setTextSize(14);
+                    nameField.setSingleLine(true);
+                    android.widget.LinearLayout.LayoutParams fieldParams = new android.widget.LinearLayout.LayoutParams(
+                        0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+                    nameField.setLayoutParams(fieldParams);
+                    row.addView(nameField);
+                    teamNameFields.add(nameField);
+                    
+                    teamFieldsContainer.addView(row);
+                }
+            }
+        };
+        refreshTeamFields.run();
+        
+        // Handle team count changes
+        countPicker.setOnValueChangedListener((picker, oldVal, newVal) -> {
+            handleTeamCountChange(newVal);
+            refreshTeamFields.run();
+        });
+        
+        builder.setView(scrollView);
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            // Save team names from edit fields
+            List<Team> currentTeams = mainActivity.getTeams();
+            if (currentTeams != null) {
+                for (int i = 0; i < Math.min(currentTeams.size(), teamNameFields.size()); i++) {
+                    String name = teamNameFields.get(i).getText().toString().trim();
+                    if (!name.isEmpty()) {
+                        currentTeams.get(i).setName(name);
+                    }
+                }
+                if (teamAdapter != null) {
+                    teamAdapter.setTeams(currentTeams);
+                }
+            }
+            updateTeamsSummary();
+            mainActivity.saveDraftState();
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+    
+    /**
+     * Update the teams summary text on the main config screen.
+     */
+    private void updateTeamsSummary() {
+        View view = getView();
+        if (view == null) return;
+        android.widget.TextView summary = view.findViewById(R.id.text_teams_summary);
+        if (summary == null) return;
+        
+        MainActivity mainActivity = getMainActivity();
+        if (mainActivity == null) return;
+        List<Team> teams = mainActivity.getTeams();
+        if (teams == null || teams.isEmpty()) {
+            summary.setText("No teams configured");
+            return;
+        }
+        
+        // Show count and first few team names
+        StringBuilder sb = new StringBuilder();
+        sb.append(teams.size()).append(" teams: ");
+        for (int i = 0; i < Math.min(teams.size(), 3); i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(teams.get(i).getName());
+        }
+        if (teams.size() > 3) {
+            sb.append("...");
+        }
+        summary.setText(sb.toString());
+    }
+    
+    /**
+     * Show SMS settings dialog.
+     */
+    private void showSmsSettingsDialog() {
+        if (getContext() == null) return;
+        
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getContext());
+        builder.setTitle("SMS Draft Updates");
+        
+        android.widget.LinearLayout layout = new android.widget.LinearLayout(getContext());
+        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+        int pad = (int) (16 * getResources().getDisplayMetrics().density);
+        layout.setPadding(pad, pad, pad, pad);
+        
+        // Enable checkbox
+        android.widget.CheckBox smsCheck = new android.widget.CheckBox(getContext());
+        smsCheck.setText("Enable SMS updates after each pick");
+        smsCheck.setChecked(checkboxSmsEnabled.isChecked());
+        smsCheck.setMinHeight((int) (48 * getResources().getDisplayMetrics().density));
+        layout.addView(smsCheck);
+        
+        // Description
+        android.widget.TextView desc = new android.widget.TextView(getContext());
+        desc.setText("Add phone numbers to receive draft pick updates via SMS.");
+        desc.setTextSize(13);
+        android.widget.LinearLayout.LayoutParams descParams = new android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+        descParams.bottomMargin = (int) (8 * getResources().getDisplayMetrics().density);
+        desc.setLayoutParams(descParams);
+        layout.addView(desc);
+        
+        // Add number row
+        android.widget.LinearLayout addRow = new android.widget.LinearLayout(getContext());
+        addRow.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        addRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        
+        android.widget.EditText numberInput = new android.widget.EditText(getContext());
+        numberInput.setHint("Phone number");
+        numberInput.setInputType(android.text.InputType.TYPE_CLASS_PHONE);
+        android.widget.LinearLayout.LayoutParams inputParams = new android.widget.LinearLayout.LayoutParams(
+            0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+        numberInput.setLayoutParams(inputParams);
+        addRow.addView(numberInput);
+        
+        android.widget.Button addBtn = new android.widget.Button(getContext());
+        addBtn.setText("Add");
+        addBtn.setTextSize(13);
+        addBtn.setAllCaps(false);
+        addRow.addView(addBtn);
+        layout.addView(addRow);
+        
+        // Numbers list
+        android.widget.LinearLayout numbersList = new android.widget.LinearLayout(getContext());
+        numbersList.setOrientation(android.widget.LinearLayout.VERTICAL);
+        layout.addView(numbersList);
+        
+        // Populate existing numbers
+        Runnable refreshList = new Runnable() {
+            @Override
+            public void run() {
+                numbersList.removeAllViews();
+                for (int i = 0; i < smsNumbers.size(); i++) {
+                    final int idx = i;
+                    android.widget.TextView tv = new android.widget.TextView(getContext());
+                    tv.setText("📱 " + smsNumbers.get(i) + "  ✕");
+                    tv.setTextSize(14);
+                    tv.setPadding(0, 8, 0, 8);
+                    tv.setOnClickListener(v2 -> {
+                        smsNumbers.remove(idx);
+                        this.run();
+                    });
+                    numbersList.addView(tv);
+                }
+            }
+        };
+        refreshList.run();
+        
+        addBtn.setOnClickListener(v -> {
+            String num = numberInput.getText().toString().trim();
+            if (!num.isEmpty()) {
+                smsNumbers.add(num);
+                numberInput.setText("");
+                refreshList.run();
+            }
+        });
+        
+        builder.setView(layout);
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            checkboxSmsEnabled.setChecked(smsCheck.isChecked());
+            updateSmsSummary();
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+    
+    /**
+     * Show position requirements dialog.
+     */
+    private void showPositionRequirementsDialog() {
+        MainActivity mainActivity = getMainActivity();
+        if (mainActivity == null || getContext() == null) return;
+        
+        DraftConfig config = mainActivity.getCurrentConfig();
+        if (config == null) return;
+        
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getContext());
+        builder.setTitle("Position Roster Requirements");
+        
+        android.widget.ScrollView scrollView = new android.widget.ScrollView(getContext());
+        android.widget.LinearLayout container = new android.widget.LinearLayout(getContext());
+        container.setOrientation(android.widget.LinearLayout.VERTICAL);
+        int pad = (int) (16 * getResources().getDisplayMetrics().density);
+        container.setPadding(pad, pad, pad, pad);
+        scrollView.addView(container);
+        
+        // Populate position requirements into the dialog container
+        populatePositionRequirements(container);
+        
+        builder.setView(scrollView);
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            // Config is already updated by the +/- button handlers
+            mainActivity.saveDraftState();
+            updatePositionReqSummary();
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+    
+    /**
+     * Show player data dialog with refresh and import options.
+     */
+    private void showPlayerDataDialog() {
+        MainActivity mainActivity = getMainActivity();
+        if (mainActivity == null || getContext() == null) return;
+        
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getContext());
+        builder.setTitle("Player Data");
+        
+        android.widget.LinearLayout layout = new android.widget.LinearLayout(getContext());
+        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+        int pad = (int) (16 * getResources().getDisplayMetrics().density);
+        layout.setPadding(pad, pad, pad, pad);
+        float density = getResources().getDisplayMetrics().density;
+        
+        // Data age info
+        android.widget.TextView ageText = new android.widget.TextView(getContext());
+        if (textPlayerDataAge != null) {
+            ageText.setText(textPlayerDataAge.getText());
+        }
+        ageText.setTextSize(13);
+        android.widget.LinearLayout.LayoutParams ageParams = new android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+        ageParams.bottomMargin = (int) (16 * density);
+        ageText.setLayoutParams(ageParams);
+        layout.addView(ageText);
+        
+        // Refresh button
+        if (com.fantasydraft.picker.utils.FeatureFlags.ENABLE_REFRESH_PLAYER_DATA) {
+            android.widget.TextView refreshWarning = new android.widget.TextView(getContext());
+            refreshWarning.setText("⚠️ Refreshing will download the latest rankings and reset your current draft.");
+            refreshWarning.setTextSize(13);
+            android.widget.LinearLayout.LayoutParams warnParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+            warnParams.bottomMargin = (int) (12 * density);
+            refreshWarning.setLayoutParams(warnParams);
+            layout.addView(refreshWarning);
+            
+            android.widget.Button refreshBtn = new android.widget.Button(getContext());
+            refreshBtn.setText("Refresh Player Data");
+            refreshBtn.setTextSize(14);
+            refreshBtn.setAllCaps(false);
+            refreshBtn.setTextColor(0xFFFFFFFF);
+            refreshBtn.setBackgroundColor(0xFF4682B4);
+            android.widget.LinearLayout.LayoutParams refParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, (int) (48 * density));
+            refParams.bottomMargin = (int) (12 * density);
+            refreshBtn.setLayoutParams(refParams);
+            refreshBtn.setOnClickListener(v -> {
+                showRefreshConfirmationDialog();
+            });
+            layout.addView(refreshBtn);
+        }
+        
+        // Import button
+        if (com.fantasydraft.picker.utils.FeatureFlags.ENABLE_IMPORT_PLAYERS) {
+            android.widget.Button importBtn = new android.widget.Button(getContext());
+            importBtn.setText("Import Custom Player Data");
+            importBtn.setTextSize(14);
+            importBtn.setAllCaps(false);
+            importBtn.setTextColor(0xFFFFFFFF);
+            importBtn.setBackgroundColor(0xFF4CAF50);
+            android.widget.LinearLayout.LayoutParams impParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, (int) (48 * density));
+            impParams.bottomMargin = (int) (8 * density);
+            importBtn.setLayoutParams(impParams);
+            importBtn.setOnClickListener(v -> openFilePicker());
+            layout.addView(importBtn);
+            
+            android.widget.TextView formatInfo = new android.widget.TextView(getContext());
+            formatInfo.setText("JSON array with fields: id, name, position, rank\nOptional: pffRank, positionRank, nflTeam, lastYearStats, injuryStatus, espnId, byeWeek");
+            formatInfo.setTextSize(11);
+            layout.addView(formatInfo);
+        }
+        
+        builder.setView(layout);
+        builder.setNegativeButton("Close", null);
+        builder.show();
+    }
+    
+    /**
+     * Update the SMS summary text on the main config screen.
+     */
+    private void updateSmsSummary() {
+        View view = getView();
+        if (view == null) return;
+        android.widget.TextView summary = view.findViewById(R.id.text_sms_summary);
+        if (summary == null) return;
+        
+        if (checkboxSmsEnabled.isChecked() && !smsNumbers.isEmpty()) {
+            summary.setText("Enabled · " + smsNumbers.size() + " number(s)");
+        } else if (checkboxSmsEnabled.isChecked()) {
+            summary.setText("Enabled · No numbers added");
+        } else {
+            summary.setText("Disabled");
+        }
+    }
+    
+    /**
+     * Update the position requirements summary text on the main config screen.
+     */
+    private void updatePositionReqSummary() {
+        View view = getView();
+        if (view == null) return;
+        android.widget.TextView summary = view.findViewById(R.id.text_position_req_summary);
+        if (summary == null) return;
+        
+        MainActivity mainActivity = getMainActivity();
+        if (mainActivity == null) return;
+        DraftConfig config = mainActivity.getCurrentConfig();
+        if (config == null) return;
+        
+        StringBuilder sb = new StringBuilder();
+        String[] positions = {"QB", "RB", "WR", "TE", "K", "DST"};
+        for (int i = 0; i < positions.length; i++) {
+            DraftConfig.PositionRequirement req = config.getPositionRequirement(positions[i]);
+            if (req != null) {
+                sb.append(positions[i]).append(" ").append(req.getMin());
+                if (req.getMax() >= 0) {
+                    sb.append("-").append(req.getMax());
+                } else {
+                    sb.append("+");
+                }
+                if (i < positions.length - 1) sb.append(", ");
+            }
+        }
+        summary.setText(sb.toString());
     }
     
     /**
@@ -919,13 +1437,16 @@ public class ConfigFragment extends Fragment {
         int numberOfRounds = numberPickerRounds.getValue();
         config.setNumberOfRounds(numberOfRounds);
         
-        // Update skip first round from checkbox
-        boolean skipFirstRound = checkboxSkipFirstRound.isChecked();
-        boolean wasSkipFirstRound = config.isSkipFirstRound();
-        config.setSkipFirstRound(skipFirstRound);
+        // Update keeper league settings
+        int keeperRounds = numberPickerKeeperRounds != null ? numberPickerKeeperRounds.getValue() : 0;
+        int wasKeeperRounds = config.getKeeperLinearRounds();
+        config.setKeeperLinearRounds(keeperRounds);
         
         // Update stopwatch enabled from checkbox
         config.setStopwatchEnabled(checkboxStopwatchEnabled.isChecked());
+        
+        // Update sort order from spinner
+        config.setSortByAdp(spinnerSortOrder.getSelectedItemPosition() == 1);
         
         // Update MainActivity's config
         mainActivity.setCurrentConfig(config);
@@ -948,10 +1469,10 @@ public class ConfigFragment extends Fragment {
         
         // Show appropriate message based on whether keeper setting changed
         if (getContext() != null) {
-            if (skipFirstRound != wasSkipFirstRound && skipFirstRound) {
-                Toast.makeText(getContext(), "Keeper league enabled. Reset draft to apply changes.", 
+            if (keeperRounds != wasKeeperRounds && keeperRounds > 0) {
+                Toast.makeText(getContext(), "Keeper league: " + keeperRounds + " linear round(s). Reset draft to apply.", 
                         Toast.LENGTH_LONG).show();
-            } else if (skipFirstRound != wasSkipFirstRound && !skipFirstRound) {
+            } else if (keeperRounds != wasKeeperRounds && keeperRounds == 0) {
                 Toast.makeText(getContext(), "Keeper league disabled. Reset draft to apply changes.", 
                         Toast.LENGTH_LONG).show();
             } else {
@@ -1035,6 +1556,9 @@ public class ConfigFragment extends Fragment {
         numberPickerRounds.setEnabled(!hasPicks);
         spinnerDraftFlow.setEnabled(!hasPicks);
         checkboxSkipFirstRound.setEnabled(!hasPicks);
+        if (numberPickerKeeperRounds != null) {
+            numberPickerKeeperRounds.setEnabled(!hasPicks);
+        }
         
         // Show/hide draft in progress banner
         if (textDraftInProgressBanner != null) {

@@ -140,8 +140,8 @@ public class TeamRosterAdapter extends RecyclerView.Adapter<TeamRosterAdapter.Vi
             // Bye week (Req 4.9)
             textByeWeek.setText("Bye: " + player.getByeWeek());
 
-            // Round and pick number (Req 4.10)
-            textRoundPick.setText("R" + pick.getRound() + " P" + pick.getPickInRound());
+            // Round and pick number with overall draft # (Req 4.10)
+            textRoundPick.setText("#" + pick.getPickNumber() + " · R" + pick.getRound() + " P" + pick.getPickInRound());
 
             // ESPN link - hide when espnId is null or empty (Req 4.11)
             String espnUrl = player.getEspnUrl();
@@ -183,7 +183,7 @@ public class TeamRosterAdapter extends RecyclerView.Adapter<TeamRosterAdapter.Vi
             textLastYearStats.setVisibility(View.GONE);
             textInjuryStatus.setVisibility(View.GONE);
             textByeWeek.setText("");
-            textRoundPick.setText("R" + pick.getRound() + " P" + pick.getPickInRound());
+            textRoundPick.setText("#" + pick.getPickNumber() + " · R" + pick.getRound() + " P" + pick.getPickInRound());
             textEspnLink.setVisibility(View.GONE);
             textEspnLink.setOnClickListener(null);
         }

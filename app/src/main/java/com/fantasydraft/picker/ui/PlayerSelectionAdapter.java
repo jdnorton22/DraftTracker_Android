@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.fantasydraft.picker.R;
 import com.fantasydraft.picker.models.Player;
 import com.fantasydraft.picker.utils.PositionColors;
+import com.fantasydraft.picker.utils.PickValueCalculator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,9 @@ public class PlayerSelectionAdapter extends RecyclerView.Adapter<PlayerSelection
     private List<Player> filteredPlayers;
     private OnPlayerClickListener listener;
     private boolean hideDrafted = false;
+    private int currentPickNumber = 0;
+    private int currentRound = 0;
+    private boolean sortByAdp = false;
 
     public interface OnPlayerClickListener {
         void onPlayerClick(Player player);
@@ -33,6 +37,18 @@ public class PlayerSelectionAdapter extends RecyclerView.Adapter<PlayerSelection
         this.players = players;
         this.filteredPlayers = new ArrayList<>(players);
         this.listener = listener;
+    }
+    
+    public void setCurrentPickNumber(int pickNumber) {
+        this.currentPickNumber = pickNumber;
+    }
+    
+    public void setCurrentRound(int round) {
+        this.currentRound = round;
+    }
+    
+    public void setSortByAdp(boolean sortByAdp) {
+        this.sortByAdp = sortByAdp;
     }
 
     @NonNull
@@ -46,7 +62,7 @@ public class PlayerSelectionAdapter extends RecyclerView.Adapter<PlayerSelection
     @Override
     public void onBindViewHolder(@NonNull PlayerViewHolder holder, int position) {
         Player player = filteredPlayers.get(position);
-        holder.bind(player, listener);
+        holder.bind(player, listener, currentPickNumber, currentRound);
     }
 
     @Override
@@ -98,16 +114,22 @@ public class PlayerSelectionAdapter extends RecyclerView.Adapter<PlayerSelection
             }
         }
         
-        // Sort by rank (primary), then position rank (secondary)
-        filteredPlayers.sort((p1, p2) -> {
-            // First compare by rank
-            int rankCompare = Integer.compare(p1.getRank(), p2.getRank());
-            if (rankCompare != 0) {
-                return rankCompare;
-            }
-            // If ranks are equal, compare by position rank
-            return Integer.compare(p1.getPositionRank(), p2.getPositionRank());
-        });
+        // Sort by rank or ADP based on setting
+        if (sortByAdp) {
+            filteredPlayers.sort((p1, p2) -> {
+                int adp1 = p1.getPffRank() > 0 ? p1.getPffRank() : Integer.MAX_VALUE;
+                int adp2 = p2.getPffRank() > 0 ? p2.getPffRank() : Integer.MAX_VALUE;
+                int adpCompare = Integer.compare(adp1, adp2);
+                if (adpCompare != 0) return adpCompare;
+                return Integer.compare(p1.getRank(), p2.getRank());
+            });
+        } else {
+            filteredPlayers.sort((p1, p2) -> {
+                int rankCompare = Integer.compare(p1.getRank(), p2.getRank());
+                if (rankCompare != 0) return rankCompare;
+                return Integer.compare(p1.getPositionRank(), p2.getPositionRank());
+            });
+        }
         
         notifyDataSetChanged();
     }
@@ -155,7 +177,7 @@ public class PlayerSelectionAdapter extends RecyclerView.Adapter<PlayerSelection
             injuryStatusText = itemView.findViewById(R.id.player_injury_status);
         }
 
-        public void bind(Player player, OnPlayerClickListener listener) {
+        public void bind(Player player, OnPlayerClickListener listener, int currentPickNumber, int currentRound) {
             // Apply favorite highlight or default transparent background
             if (player.isFavorite()) {
                 rootView.setBackgroundColor(ContextCompat.getColor(itemView.getContext(), R.color.favorite_highlight));
@@ -170,59 +192,56 @@ public class PlayerSelectionAdapter extends RecyclerView.Adapter<PlayerSelection
             badgeCircle.setColor(PositionColors.getColorForPosition(player.getPosition()));
             positionBadgeText.setBackground(badgeCircle);
             
-            nameText.setText(player.getName());
+            // Player name (with favorite star)
+            nameText.setText(player.isFavorite() ? player.getName() + " ⭐" : player.getName());
+            nameText.setTextColor(itemView.getContext().getResources().getColor(R.color.text_primary, null));
+            nameText.setPaintFlags(nameText.getPaintFlags() & ~android.graphics.Paint.UNDERLINE_TEXT_FLAG);
+            nameText.setOnClickListener(null);
             
-            // Enable ESPN links if player has ESPN ID
-            String espnUrl = player.getEspnUrl();
-            if (espnUrl != null && !espnUrl.isEmpty()) {
-                nameText.setTextColor(0xFF1976D2); // Blue color for links
-                nameText.setPaintFlags(nameText.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
-                nameText.setOnClickListener(v -> {
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(espnUrl));
-                    itemView.getContext().startActivity(browserIntent);
-                });
-            } else {
-                nameText.setTextColor(itemView.getContext().getResources().getColor(R.color.text_primary, null));
-                nameText.setPaintFlags(nameText.getPaintFlags() & ~android.graphics.Paint.UNDERLINE_TEXT_FLAG);
-                nameText.setOnClickListener(null);
-            }
-            
-            // Display just the NFL team (no position code) with clickable link to depth chart
+            // Show team abbreviation and position rank on second line
+            StringBuilder infoLine = new StringBuilder();
             if (player.getNflTeam() != null && !player.getNflTeam().isEmpty()) {
-                String teamInfo = player.getNflTeam();
-                if (player.getByeWeek() > 0) {
-                    teamInfo += " (bye-" + player.getByeWeek() + ")";
-                }
-                positionText.setText(teamInfo);
-                positionText.setVisibility(View.VISIBLE);
-                
-                // Make team abbreviation clickable to open ESPN depth chart
-                String depthChartUrl = player.getEspnDepthChartUrl();
-                if (depthChartUrl != null) {
-                    positionText.setTextColor(0xFF1976D2); // Blue color for links
-                    positionText.setPaintFlags(positionText.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
-                    positionText.setOnClickListener(v -> {
-                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(depthChartUrl));
-                        itemView.getContext().startActivity(browserIntent);
-                    });
-                } else {
-                    positionText.setTextColor(itemView.getContext().getResources().getColor(R.color.text_secondary, null));
-                    positionText.setPaintFlags(positionText.getPaintFlags() & ~android.graphics.Paint.UNDERLINE_TEXT_FLAG);
-                    positionText.setOnClickListener(null);
-                }
-            } else if (player.getByeWeek() > 0) {
-                positionText.setText("(bye-" + player.getByeWeek() + ")");
-                positionText.setVisibility(View.VISIBLE);
-                positionText.setTextColor(itemView.getContext().getResources().getColor(R.color.text_secondary, null));
-                positionText.setPaintFlags(positionText.getPaintFlags() & ~android.graphics.Paint.UNDERLINE_TEXT_FLAG);
-                positionText.setOnClickListener(null);
-            } else {
-                positionText.setVisibility(View.GONE);
+                infoLine.append(player.getNflTeam());
             }
+            positionText.setText(infoLine.toString());
+            positionText.setVisibility(infoLine.length() > 0 ? View.VISIBLE : View.GONE);
+            positionText.setTextColor(itemView.getContext().getResources().getColor(R.color.text_secondary, null));
+            positionText.setPaintFlags(positionText.getPaintFlags() & ~android.graphics.Paint.UNDERLINE_TEXT_FLAG);
+            positionText.setOnClickListener(null);
             
-            // Display ADP rank
+            // Display ADP rank with value grade
             if (player.getPffRank() > 0) {
-                pffRankText.setText("ADP:" + player.getPffRank());
+                if (currentPickNumber > 0 && !player.isDrafted()) {
+                    int valueScore = currentPickNumber - player.getPffRank();
+                    String grade;
+                    int gradeColor;
+                    
+                    if (PickValueCalculator.isElitePlayer(player)) {
+                        grade = "🏆";
+                        gradeColor = 0xFF6A1B9A; // Purple
+                    } else {
+                        // K and DST don't show reach unless drafted before round 10
+                        String pos = player.getPosition();
+                        boolean isKDst = "K".equals(pos) || "DST".equals(pos) || "DEF".equals(pos);
+                        boolean suppressReach = isKDst && currentRound >= 10;
+                        
+                        if (suppressReach || valueScore >= -8) {
+                            grade = "✓";
+                            gradeColor = 0xFF4CAF50; // Green
+                        } else if (valueScore >= -20) {
+                            grade = "~";
+                            gradeColor = 0xFFFF9800; // Orange
+                        } else {
+                            grade = "✗";
+                            gradeColor = 0xFFF44336; // Red
+                        }
+                    }
+                    pffRankText.setText(grade + " ADP:" + player.getPffRank());
+                    pffRankText.setTextColor(gradeColor);
+                } else {
+                    pffRankText.setText("ADP:" + player.getPffRank());
+                    pffRankText.setTextColor(itemView.getContext().getResources().getColor(R.color.text_secondary, null));
+                }
                 pffRankText.setVisibility(View.VISIBLE);
             } else {
                 pffRankText.setVisibility(View.GONE);
@@ -238,28 +257,27 @@ public class PlayerSelectionAdapter extends RecyclerView.Adapter<PlayerSelection
             
             // Display last year's statistics
             if (player.getLastYearStats() != null && !player.getLastYearStats().isEmpty()) {
-                statsText.setText("Last Year: " + player.getLastYearStats());
+                statsText.setText(player.getLastYearStats());
                 statsText.setVisibility(View.VISIBLE);
             } else {
                 statsText.setVisibility(View.GONE);
             }
-
+            
             // Display injury status with color coding
             if (player.getInjuryStatus() != null && !player.getInjuryStatus().isEmpty() && 
                 !player.getInjuryStatus().equalsIgnoreCase("HEALTHY")) {
                 injuryStatusText.setText(player.getInjuryStatus());
                 injuryStatusText.setVisibility(View.VISIBLE);
                 
-                // Color code based on severity
                 String status = player.getInjuryStatus().toUpperCase();
                 if (status.equals("OUT") || status.equals("IR")) {
-                    injuryStatusText.setTextColor(0xFFD32F2F); // Red
+                    injuryStatusText.setTextColor(0xFFD32F2F);
                 } else if (status.equals("DOUBTFUL")) {
-                    injuryStatusText.setTextColor(0xFFFF6F00); // Dark Orange
+                    injuryStatusText.setTextColor(0xFFFF6F00);
                 } else if (status.equals("QUESTIONABLE")) {
-                    injuryStatusText.setTextColor(0xFFFFA000); // Orange/Yellow
+                    injuryStatusText.setTextColor(0xFFFFA000);
                 } else {
-                    injuryStatusText.setTextColor(0xFF757575); // Gray
+                    injuryStatusText.setTextColor(0xFF757575);
                 }
             } else {
                 injuryStatusText.setVisibility(View.GONE);

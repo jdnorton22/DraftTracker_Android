@@ -54,11 +54,11 @@ public class DraftWalkthrough {
         };
 
         descriptions = new String[] {
-            "Shows your current pick number, round, and which team is on the clock. Tap the roster icon to view a team's drafted players.",
-            "Track how many players have been drafted at each position. Toggle between your team's counts and league-wide totals.",
-            "Displays the top-ranked undrafted player. Filter by position using the buttons. Tap the player name to view their ESPN page. Hit 'Draft This Player' to pick them.",
+            "Shows your current pick number, round, and which team is on the clock. Tap to collapse or expand the details.",
+            "Track how many players have been drafted at each position. Toggle between your team's counts and league-wide totals. Tap the roster icon to view any team's drafted players.",
+            "Displays the top-ranked undrafted player with draft advisor recommendations. Filter by position using the buttons. The card shows ADP value grade and elite status.",
             "'Draft' opens the full player list to search and select any available player. 'Reset' clears all picks and starts a new draft.",
-            "Your last 3 picks at a glance. Tap a player name to view their ESPN page. Hit 'View All' for the complete draft history with undo."
+            "Your last 3 picks at a glance with value indicators. 'View All' opens the complete draft history. 'Analytics' appears after draft completion to view league-wide grades."
         };
     }
 

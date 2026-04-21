@@ -95,6 +95,70 @@ public class PlayerManager {
         return bestAvailable;
     }
 
+    /**
+     * Get the best available player sorted by ADP (pffRank).
+     * Players without ADP data are sorted to the end.
+     */
+    public Player getBestAvailableByAdp(List<Player> players) {
+        if (players == null || players.isEmpty()) return null;
+        
+        Player bestAvailable = null;
+        int lowestAdp = Integer.MAX_VALUE;
+        
+        for (Player player : players) {
+            if (!player.isDrafted() && player.getPffRank() > 0 && player.getPffRank() < lowestAdp) {
+                lowestAdp = player.getPffRank();
+                bestAvailable = player;
+            }
+        }
+        
+        // Fallback to rank-based if no ADP data
+        if (bestAvailable == null) return getBestAvailable(players);
+        return bestAvailable;
+    }
+
+    /**
+     * Get the best available player at a position sorted by ADP.
+     */
+    public Player getBestAvailableByPositionAdp(List<Player> players, String position) {
+        if (players == null || players.isEmpty()) return null;
+        
+        Player bestAvailable = null;
+        int lowestAdp = Integer.MAX_VALUE;
+        
+        for (Player player : players) {
+            if (!player.isDrafted() && position.equals(player.getPosition()) 
+                    && player.getPffRank() > 0 && player.getPffRank() < lowestAdp) {
+                lowestAdp = player.getPffRank();
+                bestAvailable = player;
+            }
+        }
+        
+        if (bestAvailable == null) return getBestAvailableByPosition(players, position);
+        return bestAvailable;
+    }
+
+    /**
+     * Get the best available favorite player sorted by ADP.
+     */
+    public Player getBestAvailableFavoriteByAdp(List<Player> players) {
+        if (players == null || players.isEmpty()) return null;
+        
+        Player bestAvailable = null;
+        int lowestAdp = Integer.MAX_VALUE;
+        
+        for (Player player : players) {
+            if (!player.isDrafted() && player.isFavorite() 
+                    && player.getPffRank() > 0 && player.getPffRank() < lowestAdp) {
+                lowestAdp = player.getPffRank();
+                bestAvailable = player;
+            }
+        }
+        
+        if (bestAvailable == null) return getBestAvailableFavorite(players);
+        return bestAvailable;
+    }
+
 
 
     /**

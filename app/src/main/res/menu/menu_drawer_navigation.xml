@@ -13,10 +13,16 @@
     </group>
     <group android:id="@+id/group_extras">
         <item
+            android:id="@+id/navigation_help"
+            android:title="Help &amp; Guide" />
+        <item
             android:id="@+id/navigation_tutorial"
             android:title="Tutorial" />
         <item
             android:id="@+id/navigation_refresh_players"
             android:title="Refresh Players" />
+        <item
+            android:id="@+id/navigation_tip"
+            android:title="☕ Buy Me a Coffee" />
     </group>
 </menu>

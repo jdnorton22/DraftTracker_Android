@@ -33,6 +33,14 @@ public class PlayerSelectionDialog extends Dialog {
     private PlayerSelectionAdapter adapter;
     private Context context; // Store context reference
     
+    // Draft context for advisor scores
+    private com.fantasydraft.picker.models.Team currentTeam;
+    private List<com.fantasydraft.picker.models.Pick> pickHistory;
+    private List<com.fantasydraft.picker.models.Team> allTeams;
+    private com.fantasydraft.picker.models.DraftConfig draftConfig;
+    private int currentPickNumber;
+    private int currentRound;
+    
     private SearchView searchView;
     private RecyclerView recyclerView;
     private Button cancelButton;
@@ -60,6 +68,29 @@ public class PlayerSelectionDialog extends Dialog {
         this.context = context;
         this.players = players;
         this.listener = listener;
+    }
+    
+    /**
+     * Constructor with draft context for advisor scores.
+     */
+    public PlayerSelectionDialog(@NonNull Context context, List<Player> players, 
+                                  OnPlayerSelectedListener listener,
+                                  com.fantasydraft.picker.models.Team currentTeam,
+                                  List<com.fantasydraft.picker.models.Pick> pickHistory,
+                                  List<com.fantasydraft.picker.models.Team> allTeams,
+                                  com.fantasydraft.picker.models.DraftConfig draftConfig,
+                                  int currentPickNumber,
+                                  int currentRound) {
+        super(context);
+        this.context = context;
+        this.players = players;
+        this.listener = listener;
+        this.currentTeam = currentTeam;
+        this.pickHistory = pickHistory;
+        this.allTeams = allTeams;
+        this.draftConfig = draftConfig;
+        this.currentPickNumber = currentPickNumber;
+        this.currentRound = currentRound;
     }
 
     @Override
@@ -107,6 +138,9 @@ public class PlayerSelectionDialog extends Dialog {
     private void setupRecyclerView() {
         adapter = new PlayerSelectionAdapter(players, this::handlePlayerSelection);
         adapter.setHideDrafted(hideDrafted); // Apply default hide drafted setting
+        adapter.setCurrentPickNumber(currentPickNumber);
+        adapter.setCurrentRound(currentRound);
+        adapter.setSortByAdp(draftConfig != null && draftConfig.isSortByAdp());
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
         applyFilters(); // Apply initial filter to hide drafted players
@@ -267,19 +301,333 @@ public class PlayerSelectionDialog extends Dialog {
             return;
         }
 
-        // Show confirmation dialog
-        new androidx.appcompat.app.AlertDialog.Builder(getContext())
-            .setTitle("Confirm Draft Pick")
-            .setMessage("Draft " + player.getName() + " (" + player.getPosition() + ")?")
-            .setPositiveButton("Draft", (dialog, which) -> {
-                // Return selected player to listener
-                if (listener != null) {
-                    listener.onPlayerSelected(player);
+        // Show player detail card dialog
+        showPlayerDetailCard(player);
+    }
+    
+    /**
+     * Show a detail card for the selected player with stats, links, and draft button.
+     */
+    private void showPlayerDetailCard(Player player) {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getContext());
+        
+        // Build the card view programmatically
+        android.widget.ScrollView scrollView = new android.widget.ScrollView(getContext());
+        android.widget.LinearLayout card = new android.widget.LinearLayout(getContext());
+        card.setOrientation(android.widget.LinearLayout.VERTICAL);
+        int pad = (int) (16 * getContext().getResources().getDisplayMetrics().density);
+        card.setPadding(pad, pad, pad, pad);
+        scrollView.addView(card);
+        
+        float density = getContext().getResources().getDisplayMetrics().density;
+        
+        // Position badge + Name row
+        android.widget.LinearLayout nameRow = new android.widget.LinearLayout(getContext());
+        nameRow.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        nameRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        
+        android.widget.TextView badge = new android.widget.TextView(getContext());
+        badge.setText(player.getPosition());
+        badge.setTextSize(14);
+        badge.setTextColor(0xFFFFFFFF);
+        badge.setGravity(android.view.Gravity.CENTER);
+        int badgeSize = (int) (44 * density);
+        android.widget.LinearLayout.LayoutParams badgeParams = new android.widget.LinearLayout.LayoutParams(badgeSize, badgeSize);
+        badgeParams.rightMargin = (int) (12 * density);
+        badge.setLayoutParams(badgeParams);
+        android.graphics.drawable.GradientDrawable badgeCircle = new android.graphics.drawable.GradientDrawable();
+        badgeCircle.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+        badgeCircle.setColor(com.fantasydraft.picker.utils.PositionColors.getColorForPosition(player.getPosition()));
+        badge.setBackground(badgeCircle);
+        nameRow.addView(badge);
+        
+        android.widget.LinearLayout nameCol = new android.widget.LinearLayout(getContext());
+        nameCol.setOrientation(android.widget.LinearLayout.VERTICAL);
+        
+        android.widget.TextView nameText = new android.widget.TextView(getContext());
+        nameText.setText(player.isFavorite() ? player.getName() + " ⭐" : player.getName());
+        nameText.setTextSize(18);
+        nameText.setTypeface(null, android.graphics.Typeface.BOLD);
+        nameCol.addView(nameText);
+        
+        // Team + Position rank subtitle
+        StringBuilder subtitle = new StringBuilder();
+        if (player.getNflTeam() != null && !player.getNflTeam().isEmpty()) {
+            subtitle.append(player.getNflTeam());
+        }
+        if (player.getPositionRank() > 0) {
+            if (subtitle.length() > 0) subtitle.append(" · ");
+            subtitle.append(player.getPosition()).append(player.getPositionRank());
+        }
+        if (player.getByeWeek() > 0) {
+            if (subtitle.length() > 0) subtitle.append(" · ");
+            subtitle.append("Bye ").append(player.getByeWeek());
+        }
+        
+        if (subtitle.length() > 0) {
+            android.widget.TextView subtitleText = new android.widget.TextView(getContext());
+            subtitleText.setText(subtitle.toString());
+            subtitleText.setTextSize(13);
+            nameCol.addView(subtitleText);
+        }
+        nameRow.addView(nameCol);
+        card.addView(nameRow);
+        
+        // ESPN + Depth Chart buttons row
+        String espnUrlFinal = player.getEspnUrl();
+        String depthChartUrlFinal = player.getEspnDepthChartUrl();
+        if (espnUrlFinal != null || depthChartUrlFinal != null) {
+            android.widget.LinearLayout buttonRow = new android.widget.LinearLayout(getContext());
+            buttonRow.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+            buttonRow.setGravity(android.view.Gravity.CENTER);
+            android.widget.LinearLayout.LayoutParams btnRowParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+            btnRowParams.topMargin = (int) (10 * density);
+            btnRowParams.bottomMargin = (int) (4 * density);
+            buttonRow.setLayoutParams(btnRowParams);
+            
+            if (espnUrlFinal != null) {
+                android.widget.Button espnBtn = new android.widget.Button(getContext());
+                espnBtn.setText("View on ESPN");
+                espnBtn.setTextSize(13);
+                espnBtn.setAllCaps(false);
+                espnBtn.setTextColor(0xFFFFFFFF);
+                espnBtn.setBackgroundColor(0xFF1976D2); // Blue
+                android.widget.LinearLayout.LayoutParams espnParams = new android.widget.LinearLayout.LayoutParams(
+                    0, (int) (48 * density), 1);
+                espnParams.rightMargin = (int) (4 * density);
+                espnBtn.setLayoutParams(espnParams);
+                espnBtn.setOnClickListener(v -> {
+                    android.content.Intent browserIntent = new android.content.Intent(
+                        android.content.Intent.ACTION_VIEW, android.net.Uri.parse(espnUrlFinal));
+                    getContext().startActivity(browserIntent);
+                });
+                buttonRow.addView(espnBtn);
+            }
+            
+            if (depthChartUrlFinal != null) {
+                android.widget.Button depthBtn = new android.widget.Button(getContext());
+                depthBtn.setText("Depth Chart");
+                depthBtn.setTextSize(13);
+                depthBtn.setAllCaps(false);
+                depthBtn.setTextColor(0xFFFFFFFF);
+                depthBtn.setBackgroundColor(0xFF4CAF50); // Green
+                android.widget.LinearLayout.LayoutParams depthParams = new android.widget.LinearLayout.LayoutParams(
+                    0, (int) (48 * density), 1);
+                depthParams.leftMargin = (int) (4 * density);
+                depthBtn.setLayoutParams(depthParams);
+                depthBtn.setOnClickListener(v -> {
+                    android.content.Intent browserIntent = new android.content.Intent(
+                        android.content.Intent.ACTION_VIEW, android.net.Uri.parse(depthChartUrlFinal));
+                    getContext().startActivity(browserIntent);
+                });
+                buttonRow.addView(depthBtn);
+            }
+            
+            card.addView(buttonRow);
+        }
+        
+        // Divider
+        android.view.View divider = new android.view.View(getContext());
+        divider.setBackgroundColor(0xFFE0E0E0);
+        android.widget.LinearLayout.LayoutParams divParams = new android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT, (int) (1 * density));
+        divParams.topMargin = (int) (12 * density);
+        divParams.bottomMargin = (int) (12 * density);
+        divider.setLayoutParams(divParams);
+        card.addView(divider);
+        
+        // Stats row: ADP | Position Rank | Rank
+        android.widget.LinearLayout statsRow = new android.widget.LinearLayout(getContext());
+        statsRow.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        statsRow.setGravity(android.view.Gravity.CENTER);
+        android.widget.LinearLayout.LayoutParams statsRowParams = new android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+        statsRowParams.bottomMargin = (int) (8 * density);
+        statsRow.setLayoutParams(statsRowParams);
+        
+        if (player.getPffRank() > 0) {
+            addStatChip(statsRow, "ADP", String.valueOf(player.getPffRank()), density);
+        }
+        if (player.getPositionRank() > 0) {
+            addStatChip(statsRow, "Pos Rank", player.getPosition() + player.getPositionRank(), density);
+        }
+        addStatChip(statsRow, "Overall", "#" + player.getRank(), density);
+        card.addView(statsRow);
+        
+        // Last year stats
+        if (player.getLastYearStats() != null && !player.getLastYearStats().isEmpty()) {
+            android.widget.TextView statsText = new android.widget.TextView(getContext());
+            statsText.setText("📊 " + player.getLastYearStats());
+            statsText.setTextSize(13);
+            android.widget.LinearLayout.LayoutParams stParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+            stParams.bottomMargin = (int) (8 * density);
+            statsText.setLayoutParams(stParams);
+            card.addView(statsText);
+        }
+        
+        // Injury status
+        if (player.getInjuryStatus() != null && !player.getInjuryStatus().isEmpty() && 
+            !player.getInjuryStatus().equalsIgnoreCase("HEALTHY")) {
+            android.widget.TextView injuryText = new android.widget.TextView(getContext());
+            injuryText.setText("🏥 " + player.getInjuryStatus());
+            injuryText.setTextSize(13);
+            injuryText.setTypeface(null, android.graphics.Typeface.BOLD);
+            String status = player.getInjuryStatus().toUpperCase();
+            if (status.equals("OUT") || status.equals("IR")) {
+                injuryText.setTextColor(0xFFD32F2F);
+            } else if (status.equals("DOUBTFUL")) {
+                injuryText.setTextColor(0xFFFF6F00);
+            } else if (status.equals("QUESTIONABLE")) {
+                injuryText.setTextColor(0xFFFFA000);
+            }
+            android.widget.LinearLayout.LayoutParams injParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+            injParams.bottomMargin = (int) (8 * density);
+            injuryText.setLayoutParams(injParams);
+            card.addView(injuryText);
+        }
+        
+        // Draft Advisor score
+        if (currentTeam != null && pickHistory != null && draftConfig != null) {
+            com.fantasydraft.picker.utils.DraftAdvisor.Recommendation rec = 
+                com.fantasydraft.picker.utils.DraftAdvisor.getRecommendation(
+                    players, currentTeam, pickHistory, allTeams, draftConfig, currentPickNumber);
+            
+            // Get this specific player's recommendation using full pool for context
+            com.fantasydraft.picker.utils.DraftAdvisor.Recommendation playerRec = 
+                com.fantasydraft.picker.utils.DraftAdvisor.getRecommendationForPlayer(
+                    player, players, currentTeam, pickHistory, allTeams, draftConfig, currentPickNumber);
+            
+            if (playerRec != null) {
+                // Divider before advisor
+                android.view.View advDivider = new android.view.View(getContext());
+                advDivider.setBackgroundColor(0xFFE0E0E0);
+                android.widget.LinearLayout.LayoutParams advDivParams = new android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT, (int) (1 * density));
+                advDivParams.topMargin = (int) (4 * density);
+                advDivParams.bottomMargin = (int) (8 * density);
+                advDivider.setLayoutParams(advDivParams);
+                card.addView(advDivider);
+                
+                String tagEmoji;
+                int tagColor;
+                switch (playerRec.getTag()) {
+                    case "VALUE": tagEmoji = "💰"; tagColor = 0xFF4CAF50; break;
+                    case "NEED": tagEmoji = "🎯"; tagColor = 0xFF2196F3; break;
+                    case "SCARCITY": tagEmoji = "⚡"; tagColor = 0xFFFF9800; break;
+                    default: tagEmoji = "📋"; tagColor = 0xFF757575; break;
                 }
-                dismiss();
-            })
-            .setNegativeButton("Cancel", null)
-            .show();
+                
+                android.widget.TextView advisorLabel = new android.widget.TextView(getContext());
+                advisorLabel.setText("Draft Advisor");
+                advisorLabel.setTextSize(12);
+                advisorLabel.setTypeface(null, android.graphics.Typeface.BOLD);
+                android.widget.LinearLayout.LayoutParams labelParams = new android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+                labelParams.bottomMargin = (int) (2 * density);
+                advisorLabel.setLayoutParams(labelParams);
+                card.addView(advisorLabel);
+                
+                android.widget.TextView advisorText = new android.widget.TextView(getContext());
+                advisorText.setText(tagEmoji + " " + playerRec.getReasoning());
+                advisorText.setTextSize(13);
+                advisorText.setTextColor(tagColor);
+                android.widget.LinearLayout.LayoutParams advParams = new android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+                advParams.bottomMargin = (int) (4 * density);
+                advisorText.setLayoutParams(advParams);
+                card.addView(advisorText);
+                
+                // Show if this player is the top recommendation
+                if (rec != null && rec.getPlayer().getId().equals(player.getId())) {
+                    android.widget.TextView topPickText = new android.widget.TextView(getContext());
+                    topPickText.setText("⭐ #1 Recommended Pick");
+                    topPickText.setTextSize(13);
+                    topPickText.setTypeface(null, android.graphics.Typeface.BOLD);
+                    topPickText.setTextColor(0xFF4CAF50);
+                    card.addView(topPickText);
+                }
+            }
+        }
+        
+        // Action buttons row
+        android.widget.LinearLayout actionRow = new android.widget.LinearLayout(getContext());
+        actionRow.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        actionRow.setGravity(android.view.Gravity.CENTER);
+        android.widget.LinearLayout.LayoutParams actionParams = new android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+        actionParams.topMargin = (int) (12 * density);
+        actionRow.setLayoutParams(actionParams);
+        
+        android.widget.Button cancelBtn = new android.widget.Button(getContext());
+        cancelBtn.setText("Cancel");
+        cancelBtn.setTextSize(14);
+        cancelBtn.setAllCaps(false);
+        cancelBtn.setTextColor(0xFFFFFFFF);
+        cancelBtn.setBackgroundColor(0xFF757575); // Gray
+        android.widget.LinearLayout.LayoutParams cancelParams = new android.widget.LinearLayout.LayoutParams(
+            0, (int) (48 * density), 1);
+        cancelParams.rightMargin = (int) (4 * density);
+        cancelBtn.setLayoutParams(cancelParams);
+        actionRow.addView(cancelBtn);
+        
+        android.widget.Button draftBtn = new android.widget.Button(getContext());
+        draftBtn.setText("Draft");
+        draftBtn.setTextSize(14);
+        draftBtn.setAllCaps(false);
+        draftBtn.setTextColor(0xFFFFFFFF);
+        draftBtn.setBackgroundColor(0xFF4682B4); // Steel Blue
+        android.widget.LinearLayout.LayoutParams draftParams = new android.widget.LinearLayout.LayoutParams(
+            0, (int) (48 * density), 1);
+        draftParams.leftMargin = (int) (4 * density);
+        draftBtn.setLayoutParams(draftParams);
+        actionRow.addView(draftBtn);
+        
+        card.addView(actionRow);
+        
+        // Build and show dialog
+        builder.setView(scrollView);
+        android.app.AlertDialog dialog = builder.create();
+        
+        cancelBtn.setOnClickListener(v -> dialog.dismiss());
+        draftBtn.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onPlayerSelected(player);
+            }
+            dialog.dismiss();
+            dismiss();
+        });
+        
+        dialog.show();
+    }
+    
+    /**
+     * Add a stat chip (label + value) to a row.
+     */
+    private void addStatChip(android.widget.LinearLayout row, String label, String value, float density) {
+        android.widget.LinearLayout chip = new android.widget.LinearLayout(getContext());
+        chip.setOrientation(android.widget.LinearLayout.VERTICAL);
+        chip.setGravity(android.view.Gravity.CENTER);
+        android.widget.LinearLayout.LayoutParams chipParams = new android.widget.LinearLayout.LayoutParams(
+            0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+        chip.setLayoutParams(chipParams);
+        
+        android.widget.TextView valueText = new android.widget.TextView(getContext());
+        valueText.setText(value);
+        valueText.setTextSize(16);
+        valueText.setTypeface(null, android.graphics.Typeface.BOLD);
+        valueText.setGravity(android.view.Gravity.CENTER);
+        chip.addView(valueText);
+        
+        android.widget.TextView labelText = new android.widget.TextView(getContext());
+        labelText.setText(label);
+        labelText.setTextSize(11);
+        labelText.setGravity(android.view.Gravity.CENTER);
+        chip.addView(labelText);
+        
+        row.addView(chip);
     }
 
     public void updatePlayers(List<Player> newPlayers) {

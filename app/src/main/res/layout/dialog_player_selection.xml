@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -98,11 +99,13 @@
                 <com.google.android.material.chip.ChipGroup
                     android:id="@+id/position_chip_group"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    app:singleSelection="true"
+                    app:selectionRequired="true">
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_all_positions"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
                         android:layout_width="wrap_content"
                         android:layout_height="32dp"
                         android:text="All"
@@ -111,7 +114,7 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_qb"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
                         android:layout_width="wrap_content"
                         android:layout_height="32dp"
                         android:text="QB"
@@ -119,7 +122,7 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_rb"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
                         android:layout_width="wrap_content"
                         android:layout_height="32dp"
                         android:text="RB"
@@ -127,7 +130,7 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_wr"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
                         android:layout_width="wrap_content"
                         android:layout_height="32dp"
                         android:text="WR"
@@ -135,7 +138,7 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_te"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
                         android:layout_width="wrap_content"
                         android:layout_height="32dp"
                         android:text="TE"
@@ -143,7 +146,7 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_k"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
                         android:layout_width="wrap_content"
                         android:layout_height="32dp"
                         android:text="K"
@@ -151,7 +154,7 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_dst"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
                         android:layout_width="wrap_content"
                         android:layout_height="32dp"
                         android:text="DST"

@@ -4,46 +4,43 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- Zoomed out slightly (using scaleX/Y) and sharpened ends -->
     <group
         android:translateX="54"
-        android:translateY="54">
-        <group
-            android:rotation="25"
-            android:scaleX="0.75"
-            android:scaleY="0.75">
-            <!-- White Football Shape - more elongated oval -->
-            <path
-                android:fillColor="#F5F5F5"
-                android:pathData="M0,-32 Q18,-32 28,-20 Q32,-12 32,0 Q32,12 28,20 Q18,32 0,32 Q-18,32 -28,20 Q-32,12 -32,0 Q-32,-12 -28,-20 Q-18,-32 0,-32 Z"/>
-            
-            <!-- Subtle shadow/outline for depth -->
-            <path
-                android:strokeColor="#E0E0E0"
-                android:strokeWidth="1"
-                android:fillColor="@android:color/transparent"
-                android:pathData="M0,-30 Q17,-30 26,-19 Q30,-11 30,0 Q30,11 26,19 Q17,30 0,30 Q-17,30 -26,19 Q-30,11 -30,0 Q-30,-11 -26,-19 Q-17,-30 0,-30 Z"/>
-            
-            <!-- Center vertical lace line -->
-            <path
-                android:fillColor="#8B6F47"
-                android:pathData="M-1.5,-22 L-1.5,22 L1.5,22 L1.5,-22 Z"/>
-            
-            <!-- Horizontal laces - evenly spaced -->
-            <path
-                android:fillColor="#8B6F47"
-                android:pathData="M-10,-14 L10,-14 L10,-11 L-10,-11 Z"/>
-            <path
-                android:fillColor="#8B6F47"
-                android:pathData="M-10,-7 L10,-7 L10,-4 L-10,-4 Z"/>
-            <path
-                android:fillColor="#8B6F47"
-                android:pathData="M-10,0 L10,0 L10,3 L-10,3 Z"/>
-            <path
-                android:fillColor="#8B6F47"
-                android:pathData="M-10,7 L10,7 L10,10 L-10,10 Z"/>
-            <path
-                android:fillColor="#8B6F47"
-                android:pathData="M-10,14 L10,14 L10,17 L-10,17 Z"/>
-        </group>
+        android:translateY="54"
+        android:rotation="-25"
+        android:scaleX="0.85"
+        android:scaleY="0.85">
+
+        <!-- Football Body with Sharper Points -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M-52,0C-52,-8 -25,-26 0,-26C25,-26 52,-8 52,0C52,8 25,26 0,26C-25,26 -52,8 -52,0Z" />
+
+        <!-- Stripes (using background color #3b82f6) -->
+        <path
+            android:strokeColor="#3b82f6"
+            android:strokeWidth="4.5"
+            android:strokeLineCap="round"
+            android:pathData="M-36,-16C-39,-10 -39,10 -36,16" />
+        <path
+            android:strokeColor="#3b82f6"
+            android:strokeWidth="4.5"
+            android:strokeLineCap="round"
+            android:pathData="M36,-16C39,-10 39,10 36,16" />
+
+        <!-- Brown Laces (#8b5e3c) -->
+        <!-- Center Longitudinal Line -->
+        <path
+            android:fillColor="#8b5e3c"
+            android:pathData="M-22,-1.5L22,-1.5L22,1.5L-22,1.5Z" />
+
+        <!-- 6 Cross Stitches -->
+        <path android:fillColor="#8b5e3c" android:pathData="M-19,-8L-16,-8L-16,8L-19,8Z" />
+        <path android:fillColor="#8b5e3c" android:pathData="M-11.5,-8L-8.5,-8L-8.5,8L-11.5,8Z" />
+        <path android:fillColor="#8b5e3c" android:pathData="M-4,-8L-1,-8L-1,8L-4,8Z" />
+        <path android:fillColor="#8b5e3c" android:pathData="M3.5,-8L6.5,-8L6.5,8L3.5,8Z" />
+        <path android:fillColor="#8b5e3c" android:pathData="M11,-8L14,-8L14,8L11,8Z" />
+        <path android:fillColor="#8b5e3c" android:pathData="M18.5,-8L21.5,-8L21.5,8L18.5,8Z" />
     </group>
 </vector>
