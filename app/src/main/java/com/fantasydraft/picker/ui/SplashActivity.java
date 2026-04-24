@@ -8,6 +8,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.fantasydraft.picker.BuildConfig;
 import com.fantasydraft.picker.R;
 
 /**
@@ -16,7 +17,7 @@ import com.fantasydraft.picker.R;
  */
 public class SplashActivity extends AppCompatActivity {
     
-    private static final int SPLASH_DURATION = 2000; // 2 seconds
+    private static final int SPLASH_DURATION = 1000; // 1 second
     private static final int PROGRESS_UPDATE_INTERVAL = 30; // Update every 30ms
     
     private ProgressBar progressBar;
@@ -37,6 +38,10 @@ public class SplashActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progress_bar);
         loadingText = findViewById(R.id.loading_text);
         handler = new Handler();
+        
+        // Set version text dynamically from BuildConfig
+        TextView versionText = findViewById(R.id.version_text);
+        versionText.setText("Version " + BuildConfig.VERSION_NAME);
         
         // Start progress animation
         startProgressAnimation();

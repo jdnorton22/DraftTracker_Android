@@ -679,9 +679,18 @@ public class DraftFragment extends Fragment {
                 textBestPlayerInjuryStatus.setVisibility(View.GONE);
             }
             
-            // Display stats if available
+            // Display stats if available, with TD summary
             if (bestPlayer.getLastYearStats() != null && !bestPlayer.getLastYearStats().isEmpty()) {
-                textBestPlayerStats.setText(bestPlayer.getLastYearStats());
+                String compact = com.fantasydraft.picker.utils.StatParser.getCompactSummary(bestPlayer.getLastYearStats());
+                if (compact != null) {
+                    String full = compact + "  " + bestPlayer.getLastYearStats();
+                    android.text.SpannableString spannable = new android.text.SpannableString(full);
+                    spannable.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 
+                        0, compact.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    textBestPlayerStats.setText(spannable);
+                } else {
+                    textBestPlayerStats.setText(bestPlayer.getLastYearStats());
+                }
                 textBestPlayerStats.setVisibility(View.VISIBLE);
             } else {
                 textBestPlayerStats.setVisibility(View.GONE);
@@ -773,7 +782,10 @@ public class DraftFragment extends Fragment {
                             default: tagEmoji = "📋"; break;
                         }
                         String advisorText = tagEmoji + " " + playerRec.getReasoning();
-                        if (topRec != null && topRec.getPlayer().getId().equals(bestPlayer.getId())) {
+                        // Only show #1 Pick when on a position filter (not Overall)
+                        // since on Overall the displayed player is already the top-ranked
+                        if (!"Overall".equals(selectedPositionFilter) 
+                                && topRec != null && topRec.getPlayer().getId().equals(bestPlayer.getId())) {
                             advisorText += " · ⭐ #1 Pick";
                         }
                         textDraftAdvisor.setText(advisorText);

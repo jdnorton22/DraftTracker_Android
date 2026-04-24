@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#1976D2"
+    android:background="#388E3C"
     android:padding="32dp">
 
     <LinearLayout
@@ -12,12 +12,12 @@
         android:orientation="vertical"
         android:gravity="center">
 
-        <!-- App Icon/Logo Placeholder -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🏈"
-            android:textSize="72sp"
+        <!-- App Icon -->
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/football_icon_1024"
+            android:contentDescription="App icon"
             android:layout_marginBottom="24dp" />
 
         <!-- App Name -->
@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:text="Your Draft Day Companion"
             android:textSize="16sp"
-            android:textColor="#BBDEFB"
+            android:textColor="#C8E6C9"
             android:layout_marginBottom="48dp" />
 
         <!-- Progress Bar -->
@@ -48,7 +48,7 @@
             android:max="100"
             android:progress="0"
             android:progressTint="#FFFFFF"
-            android:progressBackgroundTint="#64B5F6"
+            android:progressBackgroundTint="#81C784"
             android:layout_marginBottom="16dp" />
 
         <!-- Loading Text -->
@@ -58,19 +58,19 @@
             android:layout_height="wrap_content"
             android:text="Loading players..."
             android:textSize="14sp"
-            android:textColor="#E3F2FD" />
+            android:textColor="#E8F5E9" />
 
     </LinearLayout>
 
     <!-- Version/Copyright at bottom -->
     <TextView
+        android:id="@+id/version_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:text="Version 2.0"
         android:textSize="12sp"
-        android:textColor="#90CAF9"
+        android:textColor="#A5D6A7"
         android:layout_marginBottom="16dp" />
 
 </RelativeLayout>

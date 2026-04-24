@@ -255,9 +255,18 @@ public class PlayerSelectionAdapter extends RecyclerView.Adapter<PlayerSelection
                 positionRankText.setVisibility(View.GONE);
             }
             
-            // Display last year's statistics
+            // Display last year's statistics with TD summary
             if (player.getLastYearStats() != null && !player.getLastYearStats().isEmpty()) {
-                statsText.setText(player.getLastYearStats());
+                String compact = com.fantasydraft.picker.utils.StatParser.getCompactSummary(player.getLastYearStats());
+                if (compact != null) {
+                    String full = compact + "  " + player.getLastYearStats();
+                    android.text.SpannableString spannable = new android.text.SpannableString(full);
+                    spannable.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
+                        0, compact.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    statsText.setText(spannable);
+                } else {
+                    statsText.setText(player.getLastYearStats());
+                }
                 statsText.setVisibility(View.VISIBLE);
             } else {
                 statsText.setVisibility(View.GONE);
